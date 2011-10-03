@@ -1,0 +1,10 @@
+[Activity]
+name = IngeniumMachina
+activity_version = 1
+host_version = 1
+icon = ingmach
+bundle_id = org.sugarlabs.IngeniumMachina
+exec = sugar-activity activity.IngeniumMachinaActivity
+show_launcher = yes
+license = GPLv2+
+
