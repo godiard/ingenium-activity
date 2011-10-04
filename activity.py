@@ -73,8 +73,7 @@ class IngeniumMachinaActivity(activity.Activity):
                 _('Construct map'))
 
         self._descriptions_button = self._insert_radio(tool_group, 'action_4',
-                _('Construct map'))
-        bt_description = gtk.Button(_('Write descriptions'))
+                _('Write descriptions'))
 
         self.toolbar_box.toolbar.insert(gtk.SeparatorToolItem(), -1)
 
@@ -130,36 +129,6 @@ class IngeniumMachinaActivity(activity.Activity):
     def __questions_button_cb(self, button):
         prepare_questions_win = PrepareQuestionsWin()
         self.set_canvas(prepare_questions_win)
-
-
-class EditModeMainWin(gtk.VBox):
-
-    def __init__(self, activity):
-        gtk.VBox.__init__(self)
-        self._activity = activity
-        self.introduction = gtk.Label(_('Edit your Adventure Game in 4 steps'))
-        self.pack_start(self.introduction, False, padding=10)
-
-        hbox = gtk.HBox()
-        bt_collect_info = gtk.Button(_('Collect information'))
-        hbox.pack_start(bt_collect_info, padding=10)
-
-        bt_questions = gtk.Button(_('Prepare questions'))
-        bt_questions.connect('clicked', self.__bt_questions_clicked_cb)
-        hbox.pack_start(bt_questions, padding=10)
-
-        bt_map = gtk.Button(_('Construct map'))
-        hbox.pack_start(bt_map, padding=10)
-
-        bt_description = gtk.Button(_('Write descriptions'))
-        hbox.pack_start(bt_description, padding=10)
-
-        self.pack_start(hbox, padding=10)
-        self.show_all()
-
-    def __bt_questions_clicked_cb(self, button):
-        prepare_questions_win = PrepareQuestionsWin()
-        self._activity.set_canvas(prepare_questions_win)
 
 
 class CollectInformationWin(gtk.VBox):
