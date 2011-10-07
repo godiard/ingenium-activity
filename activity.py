@@ -27,6 +27,7 @@ from sugar.activity.widgets import StopButton
 from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.radiotoolbutton import RadioToolButton
 from sugar.graphics.toggletoolbutton import ToggleToolButton
+from sugar.graphics.icon import Icon
 
 PLAY_MODE = 0
 EDIT_MODE = 1
@@ -179,9 +180,9 @@ class PrepareQuestionsWin(gtk.HBox):
         hbox_buttons = gtk.HBox()
         add_reply_button = gtk.Button(_('Add reply'))
         add_reply_button.connect('clicked', self.__add_reply_cb)
-        hbox_buttons.pack_start(add_reply_button, False)
+        hbox_buttons.pack_start(add_reply_button, False, padding=5)
 
-        vbox.pack_start(hbox_buttons, False)
+        vbox.pack_start(hbox_buttons, False, padding=5)
 
         # edit question panel
         notebook = gtk.Notebook()
@@ -190,28 +191,33 @@ class PrepareQuestionsWin(gtk.HBox):
         notebook.set_show_tabs(False)
         notebook.append_page(self.vbox_edit)    
 
-        self.vbox_edit.pack_start(gtk.Label(_('Question')))
+        self.vbox_edit.pack_start(gtk.Label(_('Question')), padding=5)
         self.question_entry = gtk.Entry()
         hbox_row = gtk.HBox()
-        hbox_row.pack_start(self.question_entry, True)
-        self.vbox_edit.pack_start(hbox_row)
+        hbox_row.pack_start(self.question_entry, True, padding=5)
+        self.vbox_edit.pack_start(hbox_row, padding=5)
 
-        self.vbox_edit.pack_start(gtk.Label(_('Replies')))
+        self.vbox_edit.pack_start(gtk.Label(_('Replies')), padding=5)
         self.replies_entries = []
         self._add_reply_entry()
+        self._add_reply_entry(reply_ok=False)
 
         self.show_all()
 
     def __add_reply_cb(self, button):
-        self._add_reply_entry()
+        self._add_reply_entry(reply_ok=False)
 
-    def _add_reply_entry(self):
+    def _add_reply_entry(self, reply_ok=True):
         hbox_row = gtk.HBox()
         reply_entry = gtk.Entry()
-        hbox_row.pack_start(reply_entry, True)
-        self.vbox_edit.pack_start(hbox_row, True)
-        reply_entry.correct_button = ToolButton('dialog-ok')
-        hbox_row.pack_start(reply_entry.correct_button, False)
+        hbox_row.pack_start(reply_entry, True, padding=5)
+        self.vbox_edit.pack_start(hbox_row, True, padding=5)
+        if reply_ok:
+            icon = Icon(icon_name='dialog-ok')
+        else:
+            icon = Icon(icon_name='dialog-cancel')
+
+        hbox_row.pack_start(icon, False, padding=5)
         hbox_row.show_all()
         self.replies_entries.append(reply_entry)
 
