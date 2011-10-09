@@ -260,7 +260,7 @@ class PrepareQuestionsWin(gtk.HBox):
             self.treemodel.append([question['question']])
 
     def __add_reply_cb(self, button):
-        self._add_reply_entry(reply_ok=False)
+        self._add_reply_entry(reply_ok=len(self.replies_entries) == 0)
 
     def _add_reply_entry(self, reply_ok=True, text=None):
         hbox_row = gtk.HBox()
@@ -314,7 +314,7 @@ class PrepareQuestionsWin(gtk.HBox):
         question = self._get_question(key)
         self._display_question(question)
 
-    def _display_question(self, question):
+    def _display_question(self, question, display_empty_entries=False):
         self.question_entry.set_text(question['question'])
         # remove old replies entries
         for hbox in self.vbox_edit.replies:
@@ -322,7 +322,7 @@ class PrepareQuestionsWin(gtk.HBox):
         self.vbox_edit.replies = []
         # add news
         for reply in question['replies']:
-            if reply['text'] != '':
+            if display_empty_entries or reply['text'] != '':
                 self._add_reply_entry(reply_ok=reply['valid'],
                         text=reply['text'])
         self._modified_data = False
@@ -345,10 +345,14 @@ class PrepareQuestionsWin(gtk.HBox):
             self._selected_key = None
 
     def add_question(self):
+        if self._modified_data:
+            # update data
+            self._update_model(self._selected_key)
+
         self._selected_key = None
 
-        question = {'question': self.question_entry.get_text(),
+        question = {'question': '',
                     'type': 'TEXT',
                     'replies': [{'text':'', 'valid':True},
                                 {'text':'', 'valid':False}]}
-        self._display_question(question)
+        self._display_question(question, display_empty_entries=True)
