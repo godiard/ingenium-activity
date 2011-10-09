@@ -29,6 +29,8 @@ from sugar.graphics.radiotoolbutton import RadioToolButton
 from sugar.graphics.toggletoolbutton import ToggleToolButton
 from sugar.graphics.icon import Icon
 
+from model import GameModel
+
 PLAY_MODE = 0
 EDIT_MODE = 1
 
@@ -42,6 +44,8 @@ class IngeniumMachinaActivity(activity.Activity):
     """IngeniumMachinaActivity class as specified in activity.info"""
 
     def __init__(self, handle):
+        self.model = GameModel()
+
         activity.Activity.__init__(self, handle)
 
         # we do not have collaboration features
@@ -79,11 +83,11 @@ class IngeniumMachinaActivity(activity.Activity):
         self.toolbar_box.toolbar.insert(gtk.SeparatorToolItem(), -1)
 
         self._add_button = ToolButton('add')
-        #self._add_button.connect('clicked', self._game_reset_cb)
+        self._add_button.connect('clicked', self.__add_cb)
         self.toolbar_box.toolbar.insert(self._add_button, -1)
 
         self._remove_button = ToolButton('remove')
-        #self._add_button.connect('clicked', self._game_reset_cb)
+        self._remove_button.connect('clicked', self.__remove_cb)
         self.toolbar_box.toolbar.insert(self._remove_button, -1)
 
         separator = gtk.SeparatorToolItem()
@@ -99,17 +103,39 @@ class IngeniumMachinaActivity(activity.Activity):
         self.set_toolbar_box(self.toolbar_box)
         self.toolbar_box.show_all()
 
+        # init edition windows
+        self.prepare_questions_win = None
+
         # init game
         self.mode = PLAY_MODE
+        self.action = None
         self.update_buttons_state()
-        #self.set_canvas(edit_win)
+        # fake temporal game cointainer (Manu will replace it)
+        # this is crazy, the read_file method is called at the mapping
+        # of canvas object
+        self.game_cointainer = gtk.HBox()
+        self.game_cointainer.show()
+        self.set_canvas(self.game_cointainer)
 
     def __change_mode_cb(self, button):
         if button.get_active():
             self.mode = EDIT_MODE
         else:
             self.mode = PLAY_MODE
+            self.game_cointainer
         self.update_buttons_state()
+
+    def __add_cb(self, button):
+        if self.action is None:
+            return
+        if self.action == EDIT_QUESTIONS_ACTION:
+            self.prepare_questions_win.add_question()
+
+    def __remove_cb(self, button):
+        if self.action is None:
+            return
+        if self.action == EDIT_QUESTIONS_ACTION:
+            self.prepare_questions_win.del_question()
 
     def update_buttons_state(self):
         self._collect_button.set_sensitive(self.mode == EDIT_MODE)
@@ -128,8 +154,21 @@ class IngeniumMachinaActivity(activity.Activity):
         return button
 
     def __questions_button_cb(self, button):
-        prepare_questions_win = PrepareQuestionsWin()
-        self.set_canvas(prepare_questions_win)
+        if self.prepare_questions_win is None:
+            self.prepare_questions_win = PrepareQuestionsWin(self.model)
+        self.set_canvas(self.prepare_questions_win)
+        self.action = EDIT_QUESTIONS_ACTION
+
+    def read_file(self, file_path):
+        '''Read file from Sugar Journal.'''
+        logging.error('READING FILE %s', file_path)
+        self.model.read(file_path)
+
+    def write_file(self, file_path):
+        '''Save file on Sugar Journal. '''
+        logging.error('WRITING FILE %s', file_path)
+        self.metadata['mime_type'] = 'application/x-ingenium-machine'
+        self.model.write(file_path)
 
 
 class CollectInformationWin(gtk.VBox):
@@ -142,8 +181,9 @@ class CollectInformationWin(gtk.VBox):
 
 class PrepareQuestionsWin(gtk.HBox):
 
-    def __init__(self):
+    def __init__(self, model):
         gtk.HBox.__init__(self)
+        self.model = model
         # Listview
         """
         +---------+------------------------------+
@@ -189,27 +229,45 @@ class PrepareQuestionsWin(gtk.HBox):
         vbox.pack_start(notebook, False)
         self.vbox_edit = gtk.VBox()
         notebook.set_show_tabs(False)
-        notebook.append_page(self.vbox_edit)    
+        notebook.append_page(self.vbox_edit)
 
         self.vbox_edit.pack_start(gtk.Label(_('Question')), padding=5)
         self.question_entry = gtk.Entry()
+        self.question_entry.connect('changed', self.__information_changed_cb)
         hbox_row = gtk.HBox()
         hbox_row.pack_start(self.question_entry, True, padding=5)
         self.vbox_edit.pack_start(hbox_row, padding=5)
 
+        self.vbox_edit.replies = []  # used to remove the childs
         self.vbox_edit.pack_start(gtk.Label(_('Replies')), padding=5)
         self.replies_entries = []
-        self._add_reply_entry()
-        self._add_reply_entry(reply_ok=False)
+        #self._add_reply_entry()
+        #self._add_reply_entry(reply_ok=False)
 
+        self._load_treemodel()
         self.show_all()
+        self._modified_data = False
+        self._selected_key = None
+
+    def __information_changed_cb(self, entry):
+        logging.debug('Data modified')
+        self._modified_data = True
+
+    def _load_treemodel(self):
+        logging.error('loading treemodel')
+        for question in self.model.data['questions']:
+            logging.error('adding question %s', question)
+            self.treemodel.append([question['question']])
 
     def __add_reply_cb(self, button):
         self._add_reply_entry(reply_ok=False)
 
-    def _add_reply_entry(self, reply_ok=True):
+    def _add_reply_entry(self, reply_ok=True, text=None):
         hbox_row = gtk.HBox()
         reply_entry = gtk.Entry()
+        if text is not None:
+            reply_entry.set_text(text)
+        reply_entry.connect('changed', self.__information_changed_cb)
         hbox_row.pack_start(reply_entry, True, padding=5)
         self.vbox_edit.pack_start(hbox_row, True, padding=5)
         if reply_ok:
@@ -220,6 +278,77 @@ class PrepareQuestionsWin(gtk.HBox):
         hbox_row.pack_start(icon, False, padding=5)
         hbox_row.show_all()
         self.replies_entries.append(reply_entry)
+        self.vbox_edit.replies.append(hbox_row)
 
-    def select_question(self):
-        pass
+    def select_question(self, treeview):
+        treestore, coldex = treeview.get_selection().get_selected()
+        logging.debug('selected question %s', treestore.get_value(coldex, 0))
+        if self._modified_data:
+            # update data
+            self._update_model(self._selected_key)
+        self._selected_key = treestore.get_value(coldex, 0)
+        self._display_model(self._selected_key)
+
+    def _update_model(self, key):
+        question = self._get_question(key)
+        new_entry = False
+        if question == None:
+            question = {}
+            new_entry = True
+        replies = []
+        for reply_entry in self.replies_entries:
+            if reply_entry.get_text() != '':
+                reply = {}
+                reply['text'] = reply_entry.get_text()
+                reply['valid'] = len(replies) == 0  # The first is the valid
+                replies.append(reply)
+        question = {'question': self.question_entry.get_text(),
+                    'type': 'TEXT',
+                    'replies': replies}
+        if new_entry:
+            self.model.data['questions'].append(question)
+            self.treemodel.append([self.question_entry.get_text()])
+        self._modified_data = False
+
+    def _display_model(self, key):
+        question = self._get_question(key)
+        self._display_question(question)
+
+    def _display_question(self, question):
+        self.question_entry.set_text(question['question'])
+        # remove old replies entries
+        for hbox in self.vbox_edit.replies:
+            self.vbox_edit.remove(hbox)
+        self.vbox_edit.replies = []
+        # add news
+        for reply in question['replies']:
+            if reply['text'] != '':
+                self._add_reply_entry(reply_ok=reply['valid'],
+                        text=reply['text'])
+        self._modified_data = False
+
+    def _get_question(self, key):
+        for question in self.model.data['questions']:
+            if question['question'] == key:
+                return question
+        return None
+
+    def del_question(self):
+        logging.debug('del question')
+        if self._selected_key is not None:
+            logging.debug('select key %s', self._selected_key)
+            self.model.data['questions'].remove(self._get_question(
+                                                        self._selected_key))
+            self.treemodel.remove(
+                        self.quest_listview.get_selection())
+            self._modified_data = False
+            self._selected_key = None
+
+    def add_question(self):
+        self._selected_key = None
+
+        question = {'question': self.question_entry.get_text(),
+                    'type': 'TEXT',
+                    'replies': [{'text':'', 'valid':True},
+                                {'text':'', 'valid':False}]}
+        self._display_question(question)
