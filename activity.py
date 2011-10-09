@@ -111,19 +111,23 @@ class IngeniumMachinaActivity(activity.Activity):
         self.mode = PLAY_MODE
         self.action = None
         self.update_buttons_state()
+        self.main_notebook = gtk.Notebook()
         # fake temporal game cointainer (Manu will replace it)
-        # this is crazy, the read_file method is called at the mapping
-        # of canvas object
         self.game_cointainer = gtk.HBox()
-        self.game_cointainer.show()
-        self.set_canvas(self.game_cointainer)
+        self.main_notebook.append_page(self.game_cointainer)
+        self.main_notebook.set_show_tabs(False)
+        self.main_notebook.show_all()
+        self.set_canvas(self.main_notebook)
 
     def __change_mode_cb(self, button):
         if button.get_active():
             self.mode = EDIT_MODE
+            if self.action == EDIT_QUESTIONS_ACTION:
+                self.main_notebook.set_current_page(
+                                            self._questions_button.page)
         else:
             self.mode = PLAY_MODE
-            self.game_cointainer
+            self.main_notebook.set_current_page(0)
         self.update_buttons_state()
 
     def __add_cb(self, button):
@@ -157,7 +161,9 @@ class IngeniumMachinaActivity(activity.Activity):
     def __questions_button_cb(self, button):
         if self.prepare_questions_win is None:
             self.prepare_questions_win = PrepareQuestionsWin(self.model)
-        self.set_canvas(self.prepare_questions_win)
+            button.page = self.main_notebook.get_n_pages()
+            self.main_notebook.append_page(self.prepare_questions_win)
+        self.main_notebook.set_current_page(button.page)
         self.action = EDIT_QUESTIONS_ACTION
 
     def read_file(self, file_path):
