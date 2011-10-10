@@ -20,6 +20,13 @@ class GameModel:
                     'file_graph_mask' = ''}
         """
 
+        self.data['resources'] = []
+        """
+        resource = {'title' = '',
+                    'file_image' = ''
+                    'file_text' = ''}
+        """
+
     def write(self, file_name):
 
         instance_path = os.path.join(activity.get_activity_root(), 'instance')
@@ -69,5 +76,9 @@ class GameModel:
         f = open(os.path.join(instance_path, data_file_name), 'r')
         try:
             self.data = simplejson.load(f)
+
+            if not 'resources' in self.data:
+                self.data['resources'] = []
+
         finally:
             f.close()

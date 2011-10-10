@@ -30,12 +30,13 @@ from sugar.graphics.toggletoolbutton import ToggleToolButton
 from sugar.graphics.icon import Icon
 
 from model import GameModel
+from resources import CollectResourcesWin
 from questions import PrepareQuestionsWin
 
 PLAY_MODE = 0
 EDIT_MODE = 1
 
-EDIT_INFORMATION_ACTION = 1
+EDIT_RESOURCES_ACTION = 1
 EDIT_QUESTIONS_ACTION = 2
 EDIT_MAP_ACTION = 3
 EDIT_DESCRIPTIONS_ACTION = 4
@@ -67,9 +68,10 @@ class IngeniumMachinaActivity(activity.Activity):
 
         tool_group = None
 
-        self._collect_button = self._insert_radio(tool_group, 'action_1',
+        self._resources_button = self._insert_radio(tool_group, 'action_1',
                 _('Collect information'))
-        tool_group = self._collect_button
+        self._resources_button.connect('clicked', self.__resources_button_cb)
+        tool_group = self._resources_button
 
         self._questions_button = self._insert_radio(tool_group, 'action_2',
                 _('Prepare questions'))
@@ -77,9 +79,12 @@ class IngeniumMachinaActivity(activity.Activity):
 
         self._map_button = self._insert_radio(tool_group, 'action_3',
                 _('Construct map'))
+        self._map_button.connect('clicked', self.__map_button_cb)
 
         self._descriptions_button = self._insert_radio(tool_group, 'action_4',
                 _('Write descriptions'))
+        self._descriptions_button.connect('clicked',
+                self.__descriptions_button_cb)
 
         self.toolbar_box.toolbar.insert(gtk.SeparatorToolItem(), -1)
 
@@ -105,11 +110,12 @@ class IngeniumMachinaActivity(activity.Activity):
         self.toolbar_box.show_all()
 
         # init edition windows
+        self.collect_resources_win = None
         self.prepare_questions_win = None
 
         # init game
         self.mode = PLAY_MODE
-        self.action = None
+        self.action = EDIT_RESOURCES_ACTION
         self.update_buttons_state()
         self.main_notebook = gtk.Notebook()
         # fake temporal game cointainer (Manu will replace it)
@@ -122,9 +128,13 @@ class IngeniumMachinaActivity(activity.Activity):
     def __change_mode_cb(self, button):
         if button.get_active():
             self.mode = EDIT_MODE
-            if self.action == EDIT_QUESTIONS_ACTION:
-                self.main_notebook.set_current_page(
-                                            self._questions_button.page)
+            if self.action == EDIT_RESOURCES_ACTION:
+                self.__resources_button_cb(self._resources_button)
+            elif self.action == EDIT_QUESTIONS_ACTION:
+                self.__questions_button_cb(self._questions_button)
+            else:
+                self.main_notebook.set_current_page(0)
+
         else:
             self.mode = PLAY_MODE
             self.main_notebook.set_current_page(0)
@@ -133,17 +143,21 @@ class IngeniumMachinaActivity(activity.Activity):
     def __add_cb(self, button):
         if self.action is None:
             return
-        if self.action == EDIT_QUESTIONS_ACTION:
+        if self.action == EDIT_RESOURCES_ACTION:
+            self.collect_resources_win.add_resource()
+        elif self.action == EDIT_QUESTIONS_ACTION:
             self.prepare_questions_win.add_question()
 
     def __remove_cb(self, button):
         if self.action is None:
             return
-        if self.action == EDIT_QUESTIONS_ACTION:
+        if self.action == EDIT_RESOURCES_ACTION:
+            self.collect_resources_win.del_resource()
+        elif self.action == EDIT_QUESTIONS_ACTION:
             self.prepare_questions_win.del_question()
 
     def update_buttons_state(self):
-        self._collect_button.set_sensitive(self.mode == EDIT_MODE)
+        self._resources_button.set_sensitive(self.mode == EDIT_MODE)
         self._questions_button.set_sensitive(self.mode == EDIT_MODE)
         self._map_button.set_sensitive(self.mode == EDIT_MODE)
         self._descriptions_button.set_sensitive(self.mode == EDIT_MODE)
@@ -165,6 +179,22 @@ class IngeniumMachinaActivity(activity.Activity):
             self.main_notebook.append_page(self.prepare_questions_win)
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_QUESTIONS_ACTION
+
+    def __resources_button_cb(self, button):
+        if self.collect_resources_win is None:
+            self.collect_resources_win = CollectResourcesWin(self.model)
+            button.page = self.main_notebook.get_n_pages()
+            self.main_notebook.append_page(self.collect_resources_win)
+        self.main_notebook.set_current_page(button.page)
+        self.action = EDIT_RESOURCES_ACTION
+
+    def __map_button_cb(self, button):
+        self.main_notebook.set_current_page(0)
+        self.action = EDIT_MAP_ACTION
+
+    def __descriptions_button_cb(self, button):
+        self.main_notebook.set_current_page(0)
+        self.action = EDIT_DESCRIPTIONS_ACTION
 
     def read_file(self, file_path):
         '''Read file from Sugar Journal.'''
