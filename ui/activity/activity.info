@@ -1,0 +1,7 @@
+[Activity]
+name = Ingenium Machina
+activity_version = 1
+bundle_id = org.sugarlabs.IngeniumMachina
+exec = sugar-activity activity.IngeniumMachinaActivity
+icon = activity-ingeniummachina
+license = GPLv2+
