@@ -309,20 +309,6 @@ class Character(object):
             self.direction = 'backward'
 
 
-class MouseCross(object):
-    def __init__(self):
-        self._cross = IMAGE_MANAGER.get_image('cross', set_keycolor=True)
-        self._pos = None
-
-    def update(self, pos):
-        self._pos = pos
-
-    def draw(self, surface):
-        x = self._pos[0] - (self._cross.get_width() / 2)
-        y = self._pos[1] - (self._cross.get_height() / 2)
-        return surface.blit(self._cross, (x, y))
-
-
 class Game(object):
     """Ingenium Machina game"""
     def __init__(self, colors=None):
@@ -331,11 +317,7 @@ class Game(object):
         self._clock = pygame.time.Clock()
         self._background = None
         self._char = None
-        self._mouse_cross = None
         self._click_x = None
-        if DEBUG:
-            self._pos_cross = None
-            self._rect_cross = None
         self._colors = colors
         if self._colors is not None:
             self._convert_colors()
@@ -363,14 +345,6 @@ class Game(object):
         self._char.add_action('walk', walk_ani)
         self._char.act('stand')
 
-        self._mouse_cross = MouseCross()
-
-        if DEBUG:
-            self._pos_cross = MouseCross()
-            self._rect_cross = MouseCross()
-
-        pygame.mouse.set_visible(False)
-
     def run(self):
         """Game loop."""
         self.setup()
@@ -387,6 +361,9 @@ class Game(object):
         self._dirty_rects = []
 
         while self._running:
+            a, b, c, d = pygame.cursors.load_xbm('my_cursor.xbm','my_cursor_mask.xbm')
+            pygame.mouse.set_cursor(a, b, c, d)
+
             # try to stay at the given frames per second
             self._clock.tick(FRAMES_PER_SECOND)
 
@@ -414,10 +391,6 @@ class Game(object):
                 elif event.type == pygame.KEYUP:
                     self._click_x = None
                     self._char.act('stand')
-                elif event.type == pygame.MOUSEMOTION:
-                    mouse_pos = pygame.mouse.get_pos()
-                    self._mouse_cross.update(mouse_pos)
-
                 elif event.type == pygame.MOUSEBUTTONUP:
                     mouse_pos = pygame.mouse.get_pos()
                     self._click_x = mouse_pos[0]
@@ -450,29 +423,8 @@ class Game(object):
                     self._click_x = None
             self._char.update()
 
-            if DEBUG:
-                self._pos_cross.update((self._char._pos_x, self._char._pos_y))
-                ani = self._char._cur_animation
-                if ani._mirror:
-                    data = ani._frames_data_mirror[ani._cur_frame]
-                else:
-                    data = ani._frames_data[ani._cur_frame]
-                rect_x = ani._origin[0] + data['delta'][0] + \
-                    (data['area'].width / 2.0)
-                self._rect_cross.update((rect_x, self._char._pos_y))
-
             # draw char
             rect = self._char.draw(screen)
-            self._dirty_rects.append(rect)
-
-            if DEBUG:
-                rect = self._pos_cross.draw(screen)
-                self._dirty_rects.append(rect)
-                rect = self._rect_cross.draw(screen)
-                self._dirty_rects.append(rect)
-
-            # draw mouse cross
-            rect = self._mouse_cross.draw(screen)
             self._dirty_rects.append(rect)
 
             # update the display
