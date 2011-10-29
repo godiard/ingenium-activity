@@ -5,13 +5,14 @@ import logging
 
 from gettext import gettext as _
 from sugar.graphics.icon import Icon
-
+from sugar.graphics.objectchooser import ObjectChooser
 
 class CollectResourcesWin(gtk.HBox):
 
-    def __init__(self, model):
+    def __init__(self, activity):
+        self._activity = activity
         gtk.HBox.__init__(self)
-        self.model = model
+        self.model = activity.model
         """
         +---------+------------------------------+
         |Listview | Title   [                  ] |
@@ -58,7 +59,9 @@ class CollectResourcesWin(gtk.HBox):
         hbox_image.pack_start(self.image, True, padding=5)
         vbox_image = gtk.VBox()
         self.load_image_button = gtk.Button('Load Image')
+        self.load_image_button.connect('clicked', self.__load_image_cb)
         vbox_image.pack_start(self.load_image_button, False, padding=5)
+
         self.size_label = gtk.Label('Image size:')
         vbox_image.pack_start(self.size_label, False, padding=5)
         hbox_image.pack_start(vbox_image, False, padding=5)
@@ -76,6 +79,30 @@ class CollectResourcesWin(gtk.HBox):
         self.show_all()
         self._modified_data = False
         self._selected_key = None
+
+    def __load_image_cb(self, button):
+        try:
+            chooser = ObjectChooser(_('Choose image'),
+                self._activity, gtk.DIALOG_MODAL |
+                gtk.DIALOG_DESTROY_WITH_PARENT, what_filter='Image')
+        except:
+            chooser = ObjectChooser(_('Choose image'),
+                self._activity, gtk.DIALOG_MODAL |
+                gtk.DIALOG_DESTROY_WITH_PARENT)
+        try:
+            result = chooser.run()
+            if result == gtk.RESPONSE_ACCEPT:
+                logging.debug('ObjectChooser: %r',
+                        chooser.get_selected_object())
+                jobject = chooser.get_selected_object()
+                if jobject and jobject.file_path:
+                    self.__load_image(jobject.file_path)
+        finally:
+            chooser.destroy()
+            del chooser
+
+    def __load_image(self, file_path):
+        self.image.set_from_file(file_path)
 
     def __information_changed_cb(self, entry):
         logging.debug('Data modified')
