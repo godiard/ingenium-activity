@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # Copyright 2011 Gonzalo Odiard, Manuel Quiñones
 #
 # This program is free software; you can redistribute it and/or modify
