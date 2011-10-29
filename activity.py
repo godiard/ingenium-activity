@@ -207,7 +207,7 @@ class IngeniumMachinaActivity(activity.Activity):
 
     def __resources_button_cb(self, button):
         if self.collect_resources_win is None:
-            self.collect_resources_win = CollectResourcesWin(self.model)
+            self.collect_resources_win = CollectResourcesWin(self)
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.collect_resources_win)
         self.main_notebook.set_current_page(button.page)
