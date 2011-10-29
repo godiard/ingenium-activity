@@ -14,12 +14,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import sys
 import gtk
 import gobject
 import logging
 
 from gettext import gettext as _
 
+from sugar import profile
 from sugar.activity import activity
 from sugar.graphics.toolbarbox import ToolbarBox
 from sugar.activity.widgets import ActivityToolbarButton
@@ -32,6 +34,12 @@ from sugar.graphics.icon import Icon
 from model import GameModel
 from resources import CollectResourcesWin
 from questions import PrepareQuestionsWin
+
+from sugar.graphics.xocolor import XoColor
+sys.path.append('..')  # import sugargame package from top directory.
+import sugargame.canvas
+
+import game
 
 PLAY_MODE = 0
 EDIT_MODE = 1
@@ -118,9 +126,25 @@ class IngeniumMachinaActivity(activity.Activity):
         self.action = EDIT_RESOURCES_ACTION
         self.update_buttons_state()
         self.main_notebook = gtk.Notebook()
-        # fake temporal game cointainer (Manu will replace it)
-        self.game_cointainer = gtk.HBox()
-        self.main_notebook.append_page(self.game_cointainer)
+
+        # build the Pygame canvas
+        self._pygamecanvas = sugargame.canvas.PygameCanvas(self)
+
+        self.main_notebook.append_page(self._pygamecanvas)
+
+        # assign keyboard focus to the PygameCanvas widget, so that
+        # keyboard events generate pygame events
+        self._pygamecanvas.grab_focus()
+
+        # create the game instance
+        xo_color = XoColor(profile.get_color())
+        colors = xo_color.get_stroke_color(), xo_color.get_fill_color()
+        self.game = game.Game(colors)
+
+        # start the game running (self.game.run is called when the
+        # activity constructor returns).
+        self._pygamecanvas.run_pygame(self.game.run)
+
         self.main_notebook.set_show_tabs(False)
         self.main_notebook.show_all()
         self.set_canvas(self.main_notebook)
