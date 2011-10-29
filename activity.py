@@ -1,4 +1,4 @@
-# Copyright 2011 Gonzalo Odiard
+# Copyright 2011 Gonzalo Odiard, Manuel Quiñones
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
