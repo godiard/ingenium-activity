@@ -384,7 +384,7 @@ class Game(object):
         pygame.display.flip()
 
         # a list of the affected screen areas, for updating only those
-        dirty_rects = []
+        self._dirty_rects = []
 
         while self._running:
             # try to stay at the given frames per second
@@ -429,11 +429,12 @@ class Game(object):
 
             # clean the background, filling the affected areas of the
             # screen with the background
-            new_dirty_rects = []
-            for rect in dirty_rects:
-                new_rect = screen.blit(self._background, rect, rect)
-                new_dirty_rects.append(new_rect)
-            dirty_rects = new_dirty_rects
+            self._old_dirty_rects = []
+            for rect in self._dirty_rects:
+                old_rect = screen.blit(self._background, rect, rect)
+                self._old_dirty_rects.append(old_rect)
+
+            self._dirty_rects = []
 
             # move graphics
             if self._click_x is not None:
@@ -456,25 +457,26 @@ class Game(object):
                     data = ani._frames_data_mirror[ani._cur_frame]
                 else:
                     data = ani._frames_data[ani._cur_frame]
-                rect_x = ani._origin[0] + data['delta'][0] + (data['area'].width / 2.0)
+                rect_x = ani._origin[0] + data['delta'][0] + \
+                    (data['area'].width / 2.0)
                 self._rect_cross.update((rect_x, self._char._pos_y))
 
             # draw char
             rect = self._char.draw(screen)
-            dirty_rects.append(rect)
+            self._dirty_rects.append(rect)
 
             if DEBUG:
                 rect = self._pos_cross.draw(screen)
-                dirty_rects.append(rect)
+                self._dirty_rects.append(rect)
                 rect = self._rect_cross.draw(screen)
-                dirty_rects.append(rect)
+                self._dirty_rects.append(rect)
 
             # draw mouse cross
             rect = self._mouse_cross.draw(screen)
-            dirty_rects.append(rect)
+            self._dirty_rects.append(rect)
 
             # update the display
-            pygame.display.update(dirty_rects)
+            pygame.display.update(self._dirty_rects + self._old_dirty_rects)
 
 
 def main():
