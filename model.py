@@ -43,13 +43,13 @@ class GameModel:
         z = zipfile.ZipFile(file_name, 'w')
         z.write(os.path.join(instance_path, data_file_name).encode('ascii',
             'ignore'), data_file_name.encode('ascii', 'ignore'))
-        """
-        for box in page.boxs:
-            if (box.image_name != ''):
-                z.write(os.path.join(instance_path,
-                    box.image_name).encode('ascii', 'ignore'),
-                    box.image_name.encode('ascii', 'ignore'))
-        """
+
+        for resource in self.data['resources']:
+            z.write(resource['file_image'], os.path.join('resources',
+                    os.path.basename(resource['file_image'])))
+            z.write(resource['file_text'], os.path.join('resources',
+                    os.path.basename(resource['file_text'])))
+
         z.close()
 
     def read(self, file_name):
@@ -57,6 +57,7 @@ class GameModel:
         logging.error('model.read %s', file_name)
         instance_path = os.path.join(activity.get_activity_root(), 'instance')
         z = zipfile.ZipFile(file_name, 'r')
+        self.check_resources_directory()
         for zipped_file in z.namelist():
             if (zipped_file != './'):
                 try:
@@ -82,3 +83,9 @@ class GameModel:
 
         finally:
             f.close()
+
+    def check_resources_directory(self):
+        resource_path = os.path.join(activity.get_activity_root(),
+                'instance', 'resources')
+        if not os.path.exists(resource_path):
+            os.makedirs(resource_path)

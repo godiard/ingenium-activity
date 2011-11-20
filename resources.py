@@ -2,10 +2,13 @@ import gtk
 import gobject
 import webkit
 import logging
+import os
+import shutil
 
 from gettext import gettext as _
 from sugar.graphics.icon import Icon
 from sugar.graphics.objectchooser import ObjectChooser
+
 
 class CollectResourcesWin(gtk.HBox):
 
@@ -55,20 +58,27 @@ class CollectResourcesWin(gtk.HBox):
         vbox.pack_start(hbox_title, False, padding=5)
 
         hbox_image = gtk.HBox()
+        scrollwin = gtk.ScrolledWindow()
+        scrollwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.image = gtk.Image()
-        hbox_image.pack_start(self.image, True, padding=5)
+        scrollwin.add_with_viewport(self.image)
+        hbox_image.pack_start(scrollwin, True, padding=5)
         vbox_image = gtk.VBox()
         self.load_image_button = gtk.Button('Load Image')
         self.load_image_button.connect('clicked', self.__load_image_cb)
         vbox_image.pack_start(self.load_image_button, False, padding=5)
 
-        self.size_label = gtk.Label('Image size:')
-        vbox_image.pack_start(self.size_label, False, padding=5)
+        size_label = gtk.Label('Image size:')
+        vbox_image.pack_start(size_label, False, padding=5)
+        self.size_label_value = gtk.Label('')
+        vbox_image.pack_start(self.size_label_value, False, padding=5)
         hbox_image.pack_start(vbox_image, False, padding=5)
         vbox.pack_start(hbox_image, True, padding=5)
 
         #hbox_editor = gtk.HBox()
         self.editor = webkit.WebView()
+        self.title_entry.connect('changed',
+                self.__information_changed_cb)
         self.editor.set_editable(True)
         height = int(gtk.gdk.screen_height() / 3)
         self.editor.set_size_request(-1, height)
@@ -79,6 +89,8 @@ class CollectResourcesWin(gtk.HBox):
         self.show_all()
         self._modified_data = False
         self._selected_key = None
+
+        self._image_resource_path = None
 
     def __load_image_cb(self, button):
         try:
@@ -103,6 +115,15 @@ class CollectResourcesWin(gtk.HBox):
 
     def __load_image(self, file_path):
         self.image.set_from_file(file_path)
+        width = self.image.props.pixbuf.get_width()
+        height = self.image.props.pixbuf.get_height()
+        self.size_label_value.set_text('%s x %s px' % (width, height))
+        # copy to resources directory
+        self.model.check_resources_directory()
+        shutil.copy(file_path, resource_path)
+        self._image_resource_path = os.path.join(resource_path,
+                os.path.basename(file_path))
+        self._modified_data = True
 
     def __information_changed_cb(self, entry):
         logging.debug('Data modified')
@@ -129,14 +150,22 @@ class CollectResourcesWin(gtk.HBox):
         if resource == None:
             resource = {}
             new_entry = True
-        # TODO
+        # save text with the same name as the image and extension .html
+        with open(self._image_resource_path + '.html', 'w') as html_file:
+            html_file.write(self._get_html())
+
         resource = {'title': self.title_entry.get_text(),
-                    'file_image': '',
-                    'file_text': ''}
+                    'file_image': self._image_resource_path,
+                    'file_text': self._image_resource_path + '.html'}
         if new_entry:
             self.model.data['resources'].append(resource)
             self.treemodel.append([self.title_entry.get_text()])
         self._modified_data = False
+
+    def _get_html(self):
+        script = 'document.title=document.documentElement.innerHTML;'
+        self.editor.execute_script(script)
+        return self.editor.get_main_frame().get_title()
 
     def _display_model(self, key):
         resource = self._get_resource(key)
@@ -144,7 +173,20 @@ class CollectResourcesWin(gtk.HBox):
 
     def _display_resource(self, resource):
         self.title_entry.set_text(resource['title'])
-        # TODO
+        if resource['file_text'] != '':
+            if os.path.exists(resource['file_text']):
+                with open(resource['file_text'], 'r') as html_file:
+                    self.editor.load_html_string(html_file.read(), 'file:///')
+        else:
+            self.editor.load_html_string('', 'file:///')
+
+        if resource['file_image'] != '':
+            if os.path.exists(resource['file_image']):
+                self.image.set_from_file(resource['file_image'])
+                self._image_resource_path = resource['file_image']
+        else:
+            self.image.clear()
+            self._image_resource_path = None
         self._modified_data = False
 
     def _get_resource(self, key):
@@ -158,7 +200,7 @@ class CollectResourcesWin(gtk.HBox):
         # TODO
         if self._selected_key is not None:
             logging.debug('select key %s', self._selected_key)
-            self.model.data['resources'].remove(self._get_question(
+            self.model.data['resources'].remove(self._get_resource(
                                                         self._selected_key))
             self.treemodel.remove(
                         self.resource_listview.get_selection())
