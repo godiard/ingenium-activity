@@ -15,13 +15,13 @@ The symbol # is a door.
     +--#--+--#--------+--#--+
  1  |     |     C     #     |
     |     #           |     |
-    +  B  +--------#--+  E  +
- 2  |     |     D     #     |
+    +  B  +-----------+  E  +
+ 2  |     |     D     |     |
     |     #           |     |
-    +--#--+--#--------+--#--+
- 3  |     |     G     #     |
+    +--#--+-----------+-----+
+ 3  |     |     G     |     |
     |     #           |     |
-    +  F  +--------#--+  I  +
+    +  F  +-----------+  I  +
  4  |     #     H     #     |
     |     |           |     |
     +--#--+--#--------+--#--+
@@ -54,12 +54,9 @@ class GameMap():
                     {'position': [1, 0, 'S'], 'objects': ['door_2']},
                     {'position': [3, 0, 'S'], 'objects': ['door_3']},
                     {'position': [0, 1, 'E'], 'objects': ['door_4']},
-                    {'position': [2, 1, 'S'], 'objects': ['door_5']},
                     {'position': [2, 1, 'E'], 'objects': ['door_6']},
                     {'position': [0, 2, 'S'], 'objects': ['door_7']},
                     {'position': [0, 2, 'E'], 'objects': ['door_8']},
-                    {'position': [1, 2, 'S'], 'objects': ['door_9']},
-                    {'position': [3, 2, 'E'], 'objects': ['door_10']},
                     {'position': [4, 2, 'S'], 'objects': ['door_11']},
                     {'position': [0, 3, 'E'], 'objects': ['door_12']},
                     {'position': [3, 3, 'E'], 'objects': ['door_13']},

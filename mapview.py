@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+# Copyright (C) 2011, One Laptop Per Child
+# Author, Gonzalo Odiard
+# License: LGPLv2
+#
+# The class TopMapView draw a map from the top
+
+import gtk
+import cairo
+from game_map import GameMap
+
+
+class TopMapView(gtk.DrawingArea):
+
+    def __init__(self, game_map, width, height):
+        self._game_map = game_map
+        self._width = width
+        self._height = height
+        super(TopMapView, self).__init__()
+        self.connect('expose_event', self.expose)
+
+    def calculate_sizes(self, width, height):
+        # calculate cell size
+        cell_width = self._width / self._game_map.data['max_x']
+        cell_height = self._height / self._game_map.data['max_y']
+        self.cell_size = min(cell_width, cell_height)
+        self._map_width = self.cell_size * self._game_map.data['max_x']
+        self.margin_x = (width - self._map_width) / 2
+        self._map_height = self.cell_size * self._game_map.data['max_y']
+        self.margin_y = (height - self._map_height) / 2
+        self._door_width = self.cell_size / 3
+
+    def expose(self, widget, event):
+        rect = self.get_allocation()
+        self.calculate_sizes(rect.width, rect.height)
+        ctx = widget.window.cairo_create()
+        # set a clip region for the expose event
+        ctx.rectangle(event.area.x, event.area.y, event.area.width,
+                event.area.height)
+        ctx.clip()
+        self.draw(ctx)
+        return False
+
+    def draw(self, ctx):
+        # background
+        ctx.rectangle(self.margin_x, self.margin_y, self._map_width,
+                self._map_height)
+        fill = (0, 0, 0)
+        stroke = (1, 1, 1)
+
+        ctx.set_source_rgb(*fill)
+        ctx.fill_preserve()
+        ctx.set_source_rgb(*stroke)
+        ctx.stroke()
+
+        # draw cells
+        for x in range(self._game_map.data['max_x']):
+            for y in range(self._game_map.data['max_y']):
+                # Draw North
+                direction = 'N'
+                wall_info = self._game_map.get_wall_info(x, y, direction)
+                x_pos = self.margin_x + x * self.cell_size
+                y_pos = self.margin_y + y * self.cell_size
+                if wall_info is not None:
+                    if self.have_door(wall_info):
+                        # draw door
+                        ctx.move_to(x_pos, y_pos)
+                        ctx.line_to(x_pos + self._door_width, y_pos)
+                        ctx.stroke()
+                        ctx.move_to(x_pos + self._door_width * 2, y_pos)
+                        ctx.line_to(x_pos + self.cell_size, y_pos)
+                    else:
+                        ctx.move_to(x_pos, y_pos)
+                        ctx.line_to(x_pos + self.cell_size, y_pos)
+                    ctx.stroke()
+
+                # Draw West
+                direction = 'W'
+                wall_info = self._game_map.get_wall_info(x, y, direction)
+                if wall_info is not None:
+                    if self.have_door(wall_info):
+                        # draw door
+                        ctx.move_to(x_pos, y_pos)
+                        ctx.line_to(x_pos, y_pos + self._door_width)
+                        ctx.stroke()
+                        ctx.move_to(x_pos, y_pos + self._door_width * 2)
+                        ctx.line_to(x_pos, y_pos + self.cell_size)
+                    else:
+                        ctx.move_to(x_pos, y_pos)
+                        ctx.line_to(x_pos, y_pos + self.cell_size)
+                        ctx.stroke()
+
+    def have_door(self, wall_info):
+        _have_door = False
+        for wall_object in wall_info:
+            if wall_object.startswith('door'):
+                _have_door = True
+                break
+        return _have_door
+
+
+def main():
+    window = gtk.Window()
+    game_map = GameMap()
+    map_view = TopMapView(game_map, 200, 200)
+
+    window.add(map_view)
+    window.connect("destroy", gtk.main_quit)
+    window.show_all()
+    gtk.main()
+
+if __name__ == "__main__":
+    main()
