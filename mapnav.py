@@ -118,6 +118,9 @@ class MapNavView(gtk.DrawingArea):
             return info
 
     def draw(self, ctx):
+        def darken(color, factor=0.8):
+            return tuple(c * factor for c in color)
+
         x, y = self.x, self.y
         info_walls = self.get_information_walls(x, y, self.direction)
         # draw back wall
@@ -163,7 +166,7 @@ class MapNavView(gtk.DrawingArea):
             ctx.line_to(self._width - self._grid_size,
                     self._height - self._grid_size)
             ctx.close_path()
-            fill = (1, 1, 1)
+            fill = darken(info_walls['wall_color'])
             stroke = (0, 0, 0)
             ctx.set_source_rgb(*fill)
             ctx.fill_preserve()
@@ -177,7 +180,7 @@ class MapNavView(gtk.DrawingArea):
                     self._height - self._grid_size)
             ctx.line_to(0, self._height)
             ctx.close_path()
-            fill = (1, 1, 1)
+            fill = darken(info_walls['wall_color'])
             stroke = (0, 0, 0)
             ctx.set_source_rgb(*fill)
             ctx.fill_preserve()
