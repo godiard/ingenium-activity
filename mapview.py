@@ -16,8 +16,18 @@ class TopMapView(gtk.DrawingArea):
         self._game_map = game_map
         self._width = width
         self._height = height
+        self._show_position = None
         super(TopMapView, self).__init__()
+        self.set_size_request(width, height)
         self.connect('expose_event', self.expose)
+
+    def show_position(self, x, y, direction):
+        self._show_position = {'x': x, 'y': y, 'direction': direction}
+        self.queue_draw()
+
+    def hide_position(self, x, y, direction):
+        self._show_position = None
+        self.queue_draw()
 
     def calculate_sizes(self, width, height):
         # calculate cell size
@@ -89,6 +99,42 @@ class TopMapView(gtk.DrawingArea):
                         ctx.move_to(x_pos, y_pos)
                         ctx.line_to(x_pos, y_pos + self.cell_size)
                         ctx.stroke()
+
+        if self._show_position is not None:
+            x = self._show_position['x']
+            y = self._show_position['y']
+            direction = self._show_position['direction']
+            x_pos = self.margin_x + x * self.cell_size + self.cell_size / 2
+            y_pos = self.margin_y + y * self.cell_size + self.cell_size / 2
+            border = 3
+            if direction == 'N':
+                point2_x = self.margin_x + x * self.cell_size + border
+                point2_y = self.margin_y + y * self.cell_size + border
+                point3_x = self.margin_x + (x + 1) * self.cell_size - border
+                point3_y = self.margin_y + y * self.cell_size + border
+            elif direction == 'E':
+                point2_x = self.margin_x + (x + 1) * self.cell_size - border
+                point2_y = self.margin_y + y * self.cell_size + border
+                point3_x = self.margin_x + (x + 1) * self.cell_size - border
+                point3_y = self.margin_y + (y + 1) * self.cell_size - border
+            elif direction == 'S':
+                point2_x = self.margin_x + (x + 1) * self.cell_size - border
+                point2_y = self.margin_y + (y + 1) * self.cell_size - border
+                point3_x = self.margin_x + x * self.cell_size + border
+                point3_y = self.margin_y + (y + 1) * self.cell_size - border
+            elif direction == 'W':
+                point2_x = self.margin_x + x * self.cell_size + border
+                point2_y = self.margin_y + (y + 1) * self.cell_size - border
+                point3_x = self.margin_x + x * self.cell_size + border
+                point3_y = self.margin_y + y * self.cell_size + border
+
+            ctx.move_to(x_pos, y_pos)
+            ctx.line_to(point2_x, point2_y)
+            ctx.line_to(point3_x, point3_y)
+            ctx.close_path()
+            fill = (1, 0, 0)
+            ctx.set_source_rgb(*fill)
+            ctx.fill()
 
     def have_door(self, wall_info):
         _have_door = False

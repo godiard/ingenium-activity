@@ -184,25 +184,39 @@ class GameMap():
         if direction == 'W':
             return x, y + 1, direction
 
-    def cross_door(self, x, y, direction, door):
+    def cross_door(self, x, y, direction):
         """ Return next position if the user go to the left"""
         # verify is the door is in the right position/direction
         objects = self.get_wall_info(x, y, direction)
         if objects is None:
             return x, y, direction
         else:
-            for door_object in objects:
-                if door_object == door:
-                    if direction == 'N':
-                        return x, y - 1, direction
-                    if direction == 'E':
-                        return x + 1, y, direction
-                    if direction == 'S':
-                        return x, y + 1, direction
-                    if direction == 'W':
-                        return x - 1, y, direction
-            # do not found the door
-            return x, y, direction
+            if self.have_door(objects):
+                new_x, new_y, new_dir = self.go_forward(x, y, direction)
+                if self.get_wall_info(new_x, new_y, new_dir) is None:
+                    new_x, new_y, new_dir = self.go_forward(new_x, new_y,
+                            new_dir)
+                return new_x, new_y, new_dir
+            else:
+                return x, y, direction
+
+    def go_forward(self, x, y, direction):
+        if direction == 'N':
+            return x, y - 1, direction
+        if direction == 'E':
+            return x + 1, y, direction
+        if direction == 'S':
+            return x, y + 1, direction
+        if direction == 'W':
+            return x - 1, y, direction
+
+    def have_door(self, wall_info):
+        _have_door = False
+        for wall_object in wall_info:
+            if wall_object.startswith('door'):
+                _have_door = True
+                break
+        return _have_door
 
 
 # testing
