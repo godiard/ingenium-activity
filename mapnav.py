@@ -110,8 +110,10 @@ class MapNavView(gtk.DrawingArea):
             ccw_direction = self._game_map.get_direction_ccw(direction)
             wall_ccw = self._game_map.get_wall_info(x, y, ccw_direction) is \
                     not None
+            # Wall color?
+            wall_color = self._game_map.get_wall_color(x, y)
             info = {'have_door': have_door, 'wall_cw': wall_cw,
-                    'wall_ccw': wall_ccw}
+                    'wall_ccw': wall_ccw, 'wall_color': wall_color}
             self.cache_info[key] = info
             return info
 
@@ -120,7 +122,7 @@ class MapNavView(gtk.DrawingArea):
         info_walls = self.get_information_walls(x, y, self.direction)
         # draw back wall
         ctx.rectangle(0, 0, self._width, self._height - self._grid_size)
-        fill = (1, 1, 1)
+        fill = info_walls['wall_color']
         stroke = (0, 0, 0)
         ctx.set_source_rgb(*fill)
         ctx.fill_preserve()
