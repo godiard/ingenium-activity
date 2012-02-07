@@ -260,5 +260,5 @@ if __name__ == '__main__':
     print game_map.go_left(2, 1, 'N')
 
     print "test cross_door"
-    print game_map.cross_door(1, 1, 'N', 'door_2')
-    print game_map.cross_door(2, 1, 'N', 'door_2')
+    print game_map.cross_door(1, 1, 'N')
+    print game_map.cross_door(2, 1, 'N')
