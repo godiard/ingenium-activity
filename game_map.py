@@ -37,9 +37,16 @@ class GameMap():
 
     data = {'max_x': 4, 'max_y': 6,
 
-        'rooms': {'A': {}, 'B': {}, 'C': {}, 'D': {},
-                'E': {}, 'F': {}, 'G': {}, 'H': {},
-                'I': {}, 'J': {}},
+        'rooms': {'A': {'wall_color': (0.7, 0.8, 0.7)},
+                'B': {'wall_color': (0.8, 0.8, 0.6)},
+                'C': {'wall_color': (0.6, 0.6, 1)},
+                'D': {'wall_color': (0.7, 0.8, 0.7)},
+                'E': {'wall_color': (0.8, 0.8, 0.6)},
+                'F': {'wall_color': (0.7, 0.8, 0.7)},
+                'G': {'wall_color': (0.3, 0.4, 0.3)},
+                'H': {'wall_color': (0.8, 0.8, 0.6)},
+                'I': {'wall_color': (0.7, 0.8, 0.7)},
+                'J': {'wall_color': (0.8, 0.8, 0.6)}},
 
         'cells': ['AAAA',
                   'BCCE',
@@ -47,19 +54,6 @@ class GameMap():
                   'FGGI',
                   'FHHI',
                   'JJJJ'],
-
-        'room_colors': {
-            'A': (0.7, 0.8, 0.7),
-            'B': (0.8, 0.8, 0.6),
-            'C': (0.6, 0.6, 1),
-            'D': (0.7, 0.8, 0.7),
-            'E': (0.8, 0.8, 0.6),
-            'F': (0.7, 0.8, 0.7),
-            'G': (0.3, 0.4, 0.3),
-            'H': (0.8, 0.8, 0.6),
-            'I': (0.7, 0.8, 0.7),
-            'J': (0.8, 0.8, 0.6),
-        },
 
         # walls are defined by the cell position x,y and the direction
         # N,S,E,W
@@ -78,7 +72,6 @@ class GameMap():
                     {'position': [1, 4, 'S'], 'objects': ['door_16']},
                     {'position': [2, 4, 'E'], 'objects': ['door_17']},
                     {'position': [3, 4, 'S'], 'objects': ['door_18']}]}
-
 
     def get_room(self, x, y):
         """ Return room key and the dictionary based in
@@ -168,7 +161,7 @@ class GameMap():
 
     def get_wall_color(self, x, y):
         room = self.get_room(x, y)
-        return self.data['room_colors'][room]
+        return self.data['rooms'][room]['wall_color']
 
     def go_right(self, x, y, direction):
         """ Return next position if the user go to the right"""
