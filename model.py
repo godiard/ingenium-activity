@@ -27,6 +27,8 @@ class GameModel:
                     'file_text' = ''}
         """
 
+        self.data['map_data'] = None
+
     def write(self, file_name):
 
         instance_path = os.path.join(activity.get_activity_root(), 'instance')

@@ -35,7 +35,7 @@ We represent this map with the following structure:
 
 class GameMap():
 
-    data = {'max_x': 4, 'max_y': 6,
+    default_data = {'max_x': 4, 'max_y': 6,
 
         'rooms': {'A': {'wall_color': (0.7, 0.8, 0.7)},
                 'B': {'wall_color': (0.8, 0.8, 0.6)},
@@ -72,6 +72,12 @@ class GameMap():
                     {'position': [1, 4, 'S'], 'objects': ['door_16']},
                     {'position': [2, 4, 'E'], 'objects': ['door_17']},
                     {'position': [3, 4, 'S'], 'objects': ['door_18']}]}
+
+    def __init__(self, data=None):
+        if data is None:
+            self.data = self.default_data
+        else:
+            self.data = data
 
     def get_room(self, x, y):
         """ Return room key and the dictionary based in

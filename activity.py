@@ -35,6 +35,7 @@ from sugar.graphics.icon import Icon
 from model import GameModel
 from resources import CollectResourcesWin
 from questions import PrepareQuestionsWin
+from editmap import EditMapWin
 
 from sugar.graphics.xocolor import XoColor
 sys.path.append('..')  # import sugargame package from top directory.
@@ -121,6 +122,7 @@ class IngeniumMachinaActivity(activity.Activity):
         # init edition windows
         self.collect_resources_win = None
         self.prepare_questions_win = None
+        self.edit_map_win = None
 
         # init game
         self.mode = PLAY_MODE
@@ -214,7 +216,11 @@ class IngeniumMachinaActivity(activity.Activity):
         self.action = EDIT_RESOURCES_ACTION
 
     def __map_button_cb(self, button):
-        self.main_notebook.set_current_page(0)
+        if self.edit_map_win is None:
+            self.edit_map_win = EditMapWin(self.model)
+            button.page = self.main_notebook.get_n_pages()
+            self.main_notebook.append_page(self.edit_map_win)
+        self.main_notebook.set_current_page(button.page)
         self.action = EDIT_MAP_ACTION
 
     def __descriptions_button_cb(self, button):
