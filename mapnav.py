@@ -78,10 +78,10 @@ class MapNavView(gtk.DrawingArea):
         self._width = width
         self._height = height
         # used as unity 1/10 of the height
-        self._grid_size = self._height / 10
-        # the door is 3 units width and 8 unit shight
-        self._door_width = self._grid_size * 3
-        self._door_height = self._grid_size * 8
+        self._grid_size = self._height / 12
+        # the door is 3 units width and 6 units hight
+        self._door_width = 3
+        self._door_height = 6
 
     def expose(self, widget, event):
         rect = self.get_allocation()
@@ -146,12 +146,14 @@ class MapNavView(gtk.DrawingArea):
         if info_walls['have_door']:
             if self.direction in ('N', 'W'):
                 # door is at rigth of the wall
-                x = self._width - self._grid_size * 5
+                x = self._width - self._grid_size * (self._door_width + 2)
             else:
                 x = self._grid_size * 2
 
-            ctx.rectangle(x, self._grid_size * 3, self._grid_size * 3,
-                    self._grid_size * 6)
+            ctx.rectangle(x,
+                    self._height - self._grid_size * (self._door_height + 1),
+                    self._grid_size * self._door_width,
+                    self._grid_size * self._door_height)
             fill = (0, 0, 0)
             stroke = (0, 0, 0)
             ctx.set_source_rgb(*fill)
