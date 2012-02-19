@@ -1,3 +1,6 @@
+from gettext import gettext as _
+import logging
+
 import gtk
 
 from game_map import GameMap
@@ -26,9 +29,37 @@ class EditMapWin(gtk.HBox):
         self.nav_view.connect('position-changed', self.show_position,
                 self.top_view)
         self.pack_start(self.nav_view, True, True)
-        self.pack_start(self.top_view, False, False)
+        rigth_vbox = gtk.VBox()
+        rigth_vbox.pack_start(self.top_view, False, False)
+        notebook = gtk.Notebook()
+        rigth_vbox.pack_start(notebook, False, False)
+
+        # resources
+        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf)
+        self._resources_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        resources_iconview = gtk.IconView(self._resources_store)
+        resources_iconview.set_text_column(0)
+        resources_iconview.set_pixbuf_column(1)
+
+        # furniture
+        furniture_iconview = gtk.IconView()
+        self.load_resources()
+
+        notebook.append_page(resources_iconview, gtk.Label(_('Resources')))
+        notebook.append_page(furniture_iconview, gtk.Label(_('Furniture')))
+
+        self.pack_start(rigth_vbox, False, False)
         self.nav_view.grab_focus()
         self.show_all()
 
     def show_position(self, nav_view, x, y, direction, top_view):
         self.top_view.show_position(x, y, direction)
+
+    def load_resources(self):
+        logging.error('Loading resources')
+        for resource in self.model.data['resources']:
+            title = resource['title']
+            file_image = resource['file_image']
+            logging.error('Adding %s %s', title, file_image)
+            pxb = gtk.gdk.pixbuf_new_from_file_at_size(file_image, 100, 100)
+            self._resources_store.append([title, pxb])
