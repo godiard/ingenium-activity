@@ -10,6 +10,8 @@ import gobject
 import cairo
 import logging
 
+from sugar.graphics.style import Color
+
 from game_map import GameMap
 from mapview import TopMapView
 
@@ -150,16 +152,7 @@ class MapNavView(gtk.DrawingArea):
             else:
                 x = self._grid_size * 2
 
-            ctx.rectangle(x,
-                    self._height - self._grid_size * (self._door_height + 1),
-                    self._grid_size * self._door_width,
-                    self._grid_size * self._door_height)
-            fill = (0, 0, 0)
-            stroke = (0, 0, 0)
-            ctx.set_source_rgb(*fill)
-            ctx.fill_preserve()
-            ctx.set_source_rgb(*stroke)
-            ctx.stroke()
+            self.draw_door(ctx, x)
 
         if info_walls['wall_cw']:
             ctx.move_to(self._width - self._grid_size, 0)
@@ -188,6 +181,41 @@ class MapNavView(gtk.DrawingArea):
             ctx.fill_preserve()
             ctx.set_source_rgb(*stroke)
             ctx.stroke()
+
+    def draw_door(self, ctx, x):
+        y = self._height - self._grid_size * (self._door_height + 1)
+        ctx.rectangle(x, y, self._grid_size * self._door_width,
+                self._grid_size * self._door_height)
+        fill = (Color('#8B6914').get_rgba())
+        stroke = (0, 0, 0)
+        ctx.set_source_rgba(*fill)
+        ctx.fill_preserve()
+        ctx.set_source_rgb(*stroke)
+        ctx.stroke()
+
+        # frame
+        frame_width = self._grid_size * self._door_width / 8
+        fill = (Color('#6B4904').get_rgba())
+        ctx.set_source_rgba(*fill)
+        ctx.rectangle(x, y, self._grid_size * self._door_width, frame_width)
+        ctx.fill()
+        ctx.rectangle(x, y, frame_width, self._grid_size * self._door_height)
+        ctx.fill()
+        ctx.rectangle(x + self._grid_size * self._door_width - frame_width, y,
+                frame_width, self._grid_size * self._door_height)
+        ctx.fill()
+
+        # handle
+        if self.direction in ('N', 'W'):
+            # door is at rigth of the wall
+            x_handle = x + frame_width * 1.5
+        else:
+            x_handle = x + self._grid_size * self._door_width - \
+                    frame_width * 2.5
+        y_handle = y + self._grid_size * self._door_height / 2
+
+        ctx.rectangle(x_handle, y_handle, frame_width, frame_width / 4)
+        ctx.fill()
 
 
 def show_position(nav_view, x, y, direction, top_view):
