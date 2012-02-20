@@ -6,6 +6,8 @@ import os
 import shutil
 
 from gettext import gettext as _
+
+from sugar.activity import activity
 from sugar.graphics.icon import Icon
 from sugar.graphics.objectchooser import ObjectChooser
 
@@ -120,6 +122,8 @@ class CollectResourcesWin(gtk.HBox):
         self.size_label_value.set_text('%s x %s px' % (width, height))
         # copy to resources directory
         self.model.check_resources_directory()
+        resource_path = os.path.join(activity.get_activity_root(),
+                'instance', 'resources')
         shutil.copy(file_path, resource_path)
         self._image_resource_path = os.path.join(resource_path,
                 os.path.basename(file_path))
