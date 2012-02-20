@@ -35,7 +35,7 @@ class EditMapWin(gtk.HBox):
         rigth_vbox = gtk.VBox()
         rigth_vbox.pack_start(self.top_view, False, False)
         notebook = gtk.Notebook()
-        rigth_vbox.pack_start(notebook, False, False)
+        rigth_vbox.pack_start(notebook, True, True)
 
         # resources
         self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf)
@@ -53,8 +53,14 @@ class EditMapWin(gtk.HBox):
         furniture_iconview.set_pixbuf_column(1)
         self.load_furniture()
 
-        notebook.append_page(resources_iconview, gtk.Label(_('Resources')))
-        notebook.append_page(furniture_iconview, gtk.Label(_('Furniture')))
+        scrolled1 = gtk.ScrolledWindow()
+        scrolled1.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        scrolled1.add_with_viewport(resources_iconview)
+        notebook.append_page(scrolled1, gtk.Label(_('Resources')))
+        scrolled2 = gtk.ScrolledWindow()
+        scrolled2.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        scrolled2.add_with_viewport(furniture_iconview)
+        notebook.append_page(scrolled2, gtk.Label(_('Furniture')))
 
         self.pack_start(rigth_vbox, False, False)
         self.nav_view.grab_focus()
