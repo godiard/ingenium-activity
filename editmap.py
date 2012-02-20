@@ -1,7 +1,10 @@
 from gettext import gettext as _
 import logging
+import os
 
 import gtk
+
+from sugar.activity import activity
 
 from game_map import GameMap
 from mapview import TopMapView
@@ -40,10 +43,15 @@ class EditMapWin(gtk.HBox):
         resources_iconview = gtk.IconView(self._resources_store)
         resources_iconview.set_text_column(0)
         resources_iconview.set_pixbuf_column(1)
+        self.load_resources()
 
         # furniture
-        furniture_iconview = gtk.IconView()
-        self.load_resources()
+        self._furniture_store = gtk.ListStore(str, gtk.gdk.Pixbuf)
+        self._furniture_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        furniture_iconview = gtk.IconView(self._furniture_store)
+        furniture_iconview.set_text_column(0)
+        furniture_iconview.set_pixbuf_column(1)
+        self.load_furniture()
 
         notebook.append_page(resources_iconview, gtk.Label(_('Resources')))
         notebook.append_page(furniture_iconview, gtk.Label(_('Furniture')))
@@ -63,3 +71,15 @@ class EditMapWin(gtk.HBox):
             logging.error('Adding %s %s', title, file_image)
             pxb = gtk.gdk.pixbuf_new_from_file_at_size(file_image, 100, 100)
             self._resources_store.append([title, pxb])
+
+    def load_furniture(self):
+        images_path = os.path.join(activity.get_bundle_path(),
+                'images/furniture')
+        logging.error('Loading furniture from %s', images_path)
+        for file_name in os.listdir(images_path):
+            if not file_name.endswith('.txt'):
+                image_file_name = os.path.join(images_path, file_name)
+                logging.error('Adding %s', image_file_name)
+                pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name,
+                        100, 100)
+                self._furniture_store.append(['', pxb])
