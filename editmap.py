@@ -26,6 +26,7 @@ class EditMapWin(gtk.HBox):
         self.model.data['map_data'] = self.game_map.data
 
         self.nav_view = MapNavView(self.game_map)
+        self.nav_view.mode = MapNavView.MODE_EDIT
         self.top_view = TopMapView(self.game_map, 150, 150)
         self.top_view.show_position(self.nav_view.x, self.nav_view.y,
                 self.nav_view.direction)
@@ -48,11 +49,11 @@ class EditMapWin(gtk.HBox):
         # furniture
         self._furniture_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
         self._furniture_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        furniture_iconview = gtk.IconView(self._furniture_store)
-        furniture_iconview.set_text_column(0)
-        furniture_iconview.set_pixbuf_column(1)
+        self.furniture_iconview = gtk.IconView(self._furniture_store)
+        self.furniture_iconview.set_text_column(0)
+        self.furniture_iconview.set_pixbuf_column(1)
         self.load_furniture()
-        furniture_iconview.connect("item-activated",
+        self.furniture_iconview.connect('item-activated',
                 self.__furniture_activated_cb)
 
         scrolled1 = gtk.ScrolledWindow()
@@ -61,7 +62,7 @@ class EditMapWin(gtk.HBox):
         notebook.append_page(scrolled1, gtk.Label(_('Resources')))
         scrolled2 = gtk.ScrolledWindow()
         scrolled2.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-        scrolled2.add_with_viewport(furniture_iconview)
+        scrolled2.add_with_viewport(self.furniture_iconview)
         notebook.append_page(scrolled2, gtk.Label(_('Furniture')))
 
         self.pack_start(rigth_vbox, False, False)
@@ -95,12 +96,24 @@ class EditMapWin(gtk.HBox):
     def __furniture_activated_cb(self, widget, item):
         model = widget.get_model()
         image_file_name = model[item][2]
+        self._add_image(image_file_name)
+
+    def _add_image(self, image_file_name):
         logging.error('Image %s selected', image_file_name)
         x = self.nav_view.x
         y = self.nav_view.y
         direction = self.nav_view.direction
         wall_object = {'image_file_name': image_file_name,
-                'x': 100, 'y': 100, 'width': 200, 'height': 200}
+                'wall_x': 100, 'wall_y': 100, 'scale': 50}
 
         self.game_map.add_object_to_wall(x, y, direction, wall_object)
         self.nav_view.update_wall_info(x, y, direction)
+
+    def add_selected_object(self):
+        if self.furniture_iconview.is_focus():
+            item = self.furniture_iconview.get_selected_items()[0][0]
+            image_file_name = self._furniture_store[item][2]
+            self._add_image(image_file_name)
+
+    def remove_selected_object(self):
+        self.nav_view.remove_selected_object()

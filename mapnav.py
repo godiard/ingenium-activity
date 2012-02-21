@@ -16,6 +16,18 @@ from sugar.graphics.style import Color
 from game_map import GameMap
 from mapview import TopMapView
 
+WIDTH_CONTROL_LINES = 2
+RESIZE_HANDLE_SIZE = 10
+
+SELECTION_MODE_MOVE = 1
+SELECTION_MODE_RESIZE = 2
+
+
+class SelectedObject():
+
+    def __init__(self):
+        pass
+
 
 class MapNavView(gtk.DrawingArea):
 
@@ -24,20 +36,29 @@ class MapNavView(gtk.DrawingArea):
                           ([gobject.TYPE_INT, gobject.TYPE_INT,
                             gobject.TYPE_STRING]))}
 
+    MODE_PLAY = 0
+    MODE_EDIT = 1
+
     def __init__(self, game_map):
         self._game_map = game_map
         self.x = 0
         self.y = 0
         self.direction = 'S'
         self.cache_info = {}
-
+        self.mode = self.MODE_PLAY
+        self.selected = None
         super(MapNavView, self).__init__()
         self.set_can_focus(True)
-        self.add_events(gtk.gdk.KEY_PRESS_MASK)
+        self.add_events(gtk.gdk.KEY_PRESS_MASK | gtk.gdk.POINTER_MOTION_MASK |
+                gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK |
+                gtk.gdk.BUTTON1_MOTION_MASK)
         self.connect('expose_event', self.expose)
-        self.connect('key-press-event', self._key_press_event_cb)
+        self.connect('key-press-event', self.__key_press_event_cb)
+        self.connect('button_press_event', self.__button_press_event_cb)
+        self.connect('motion_notify_event', self.__motion_notify_event_cb)
+        self.connect('button_release_event', self.__button_release_event_cb)
 
-    def _key_press_event_cb(self, widget, event):
+    def __key_press_event_cb(self, widget, event):
         keyname = gtk.gdk.keyval_name(event.keyval)
         if keyname not in ('Up', 'KP_Up', 'Down', 'KP_Down', 'Left', 'KP_Left',
                 'Right', 'KP_Right'):
@@ -78,6 +99,67 @@ class MapNavView(gtk.DrawingArea):
             self.queue_draw()
         return True
 
+    def __button_press_event_cb(self, widget, event):
+        if self.mode == self.MODE_EDIT:
+            info_walls = self.get_information_walls(self.x, self.y,
+                    self.direction)
+            for wall_object in info_walls['objects']:
+                wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
+                width, height = wall_object['width'], wall_object['height']
+                # check if is over the image
+                if wall_x < event.x < wall_x + width and \
+                    wall_y < event.y < wall_y + height:
+                    self.selected = SelectedObject()
+                    self.selected.data = wall_object
+                    self.selected.dx = wall_x - event.x
+                    self.selected.dy = wall_y - event.y
+                    self.selected.mode = SELECTION_MODE_MOVE
+                    self.update_wall_info(self.x, self.y, self.direction)
+                if wall_x - RESIZE_HANDLE_SIZE / 2 < event.x < \
+                        wall_x + RESIZE_HANDLE_SIZE / 2 and \
+                    wall_y - RESIZE_HANDLE_SIZE / 2 < event.y < \
+                        wall_y + RESIZE_HANDLE_SIZE / 2:
+                    if self.selected is None:
+                        self.selected = SelectedObject()
+                        self.selected.data = wall_object
+                    self.selected.mode = SELECTION_MODE_RESIZE
+                    self.selected.x = event.x
+                    self.selected.y = event.y
+                    self.update_wall_info(self.x, self.y, self.direction)
+
+    def __motion_notify_event_cb(self, widget, event):
+        if self.mode == self.MODE_EDIT:
+            if self.selected is not None:
+                # move the object
+                # TODO: control limits
+                if self.selected.mode == SELECTION_MODE_MOVE:
+                    self.selected.data['original']['wall_x'] = event.x + \
+                            self.selected.dx
+                    self.selected.data['original']['wall_y'] = event.y + \
+                            self.selected.dy
+                    self.update_wall_info(self.x, self.y, self.direction)
+                elif self.selected.mode == SELECTION_MODE_RESIZE:
+                    if event.x > self.selected.x and event.y > self.selected.y:
+                        if self.selected.data['original']['scale'] >= 10:
+                            self.selected.data['original']['scale'] = \
+                                self.selected.data['original']['scale'] - 1
+                    else:
+                        self.selected.data['original']['scale'] = \
+                            self.selected.data['original']['scale'] + 1
+                    self.update_wall_info(self.x, self.y, self.direction)
+
+    def __button_release_event_cb(self, widget, event):
+        if self.selected is not None:
+            self.selected.mode = None
+
+    def remove_selected_object(self):
+        if self.selected is not None:
+            wall_object = self.selected.data['original']
+            self._game_map.del_object_from_wall(self.x, self.y,
+                    self.direction, wall_object)
+            self.update_wall_info(self.x, self.y, self.direction)
+            self.selected = None
+
     def calculate_sizes(self, width, height):
         self._width = width
         self._height = height
@@ -113,8 +195,6 @@ class MapNavView(gtk.DrawingArea):
             objects = self._game_map.get_wall_info(x, y, direction)
             for wall_object in objects:
                 image_file_name = wall_object['image_file_name']
-                wall_x, wall_y = wall_object['x'], wall_object['y']
-                width, height = wall_object['width'], wall_object['height']
                 # create a new dict to add the svg handle
                 # can't be in the model because can't be put in the json
                 new_dict = {}
@@ -122,6 +202,7 @@ class MapNavView(gtk.DrawingArea):
                 if not 'image_cache' in wall_object:
                     svg = rsvg.Handle(file=image_file_name)
                     new_dict['image_cache'] = svg
+                new_dict['original'] = wall_object
                 wall_objects.append(new_dict)
 
             # have door?
@@ -208,10 +289,33 @@ class MapNavView(gtk.DrawingArea):
         if info_walls['objects']:
             for wall_object in info_walls['objects']:
                 image_file_name = wall_object['image_file_name']
-                wall_x, wall_y = wall_object['x'], wall_object['y']
-                width, height = wall_object['width'], wall_object['height']
+                wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
+                logging.error('Drawing object at %d %d', wall_x, wall_y)
+                scale = wall_object['scale']
                 svg = wall_object['image_cache']
+                width = svg.props.width * scale / 100.0
+                height = svg.props.height * scale / 100.0
+                wall_object['width'] = width
+                wall_object['height'] = height
+                ctx.save()
+                ctx.translate(wall_x, wall_y)
+                ctx.scale(scale / 100.0, scale / 100.0)
                 svg.render_cairo(ctx)
+                ctx.restore()
+                if self.mode == self.MODE_EDIT and \
+                    self.selected is not None and \
+                    self.selected.data['original'] == wall_object['original']:
+                    # draw controls
+                    ctx.set_line_width(WIDTH_CONTROL_LINES)
+                    ctx.set_source_rgb(1, 1, 1)
+                    ctx.rectangle(wall_x - 2, wall_y - 2,
+                            width + 4, height + 4)
+                    ctx.stroke()
+                    ctx.set_source_rgb(1, 1, 1)
+                    ctx.rectangle(wall_x - RESIZE_HANDLE_SIZE / 2,
+                            wall_y - RESIZE_HANDLE_SIZE / 2,
+                            RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE)
+                    ctx.stroke()
 
     def draw_door(self, ctx, x):
         y = self._height - self._grid_size * (self._door_height + 1)

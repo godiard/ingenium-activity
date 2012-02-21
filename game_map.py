@@ -178,6 +178,15 @@ class GameMap():
             wall_info['objects'].append(wall_object)
             self.data['walls'].append(wall_info)
 
+    def del_object_from_wall(self, x, y, direction, wall_object):
+        for wall in self.data['walls']:
+            if wall['position'] == [x, y, direction]:
+                # locate the object:
+                for order, existing_object in enumerate(wall['objects']):
+                    if existing_object == wall_object:
+                        del wall['objects'][order]
+                        break
+
     def get_wall_color(self, x, y):
         room = self.get_room(x, y)
         return self.data['rooms'][room]['wall_color']

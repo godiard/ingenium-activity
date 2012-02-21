@@ -174,6 +174,8 @@ class IngeniumMachinaActivity(activity.Activity):
             self.collect_resources_win.add_resource()
         elif self.action == EDIT_QUESTIONS_ACTION:
             self.prepare_questions_win.add_question()
+        elif self.action == EDIT_MAP_ACTION:
+            self.edit_map_win.add_selected_object()
 
     def __remove_cb(self, button):
         if self.action is None:
@@ -182,6 +184,8 @@ class IngeniumMachinaActivity(activity.Activity):
             self.collect_resources_win.del_resource()
         elif self.action == EDIT_QUESTIONS_ACTION:
             self.prepare_questions_win.del_question()
+        elif self.action == EDIT_MAP_ACTION:
+            self.edit_map_win.remove_selected_object()
 
     def update_buttons_state(self):
         self._resources_button.set_sensitive(self.mode == EDIT_MODE)
