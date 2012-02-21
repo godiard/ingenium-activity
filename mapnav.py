@@ -54,7 +54,8 @@ class MapNavView(gtk.DrawingArea):
             reversed_direction = \
                     self._game_map.get_reversed_direction(self.direction)
             wall_info = self._game_map.get_wall_info(x, y, reversed_direction)
-            if wall_info is None or self._game_map.have_door(wall_info):
+            if wall_info is None or \
+                    self._game_map.have_door(x, y, reversed_direction):
                 new_x, new_y, new_direction = \
                         self._game_map.cross_door(x, y, reversed_direction)
                 new_direction = self.direction
@@ -102,8 +103,7 @@ class MapNavView(gtk.DrawingArea):
             return self.cache_info[key]
         else:
             # have door?
-            wall_info = self._game_map.get_wall_info(x, y, direction)
-            have_door = self._game_map.have_door(wall_info)
+            have_door = self._game_map.have_door(x, y, direction)
             # there are a page at cw direction?
             cw_direction = self._game_map.get_direction_cw(direction)
             wall_cw = self._game_map.get_wall_info(x, y, cw_direction) is \

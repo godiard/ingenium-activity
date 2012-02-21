@@ -72,7 +72,7 @@ class TopMapView(gtk.DrawingArea):
                 x_pos = self.margin_x + x * self.cell_size
                 y_pos = self.margin_y + y * self.cell_size
                 if wall_info is not None:
-                    if self.have_door(wall_info):
+                    if self._game_map.have_door(x, y, direction):
                         # draw door
                         ctx.move_to(x_pos, y_pos)
                         ctx.line_to(x_pos + self._door_width, y_pos)
@@ -88,7 +88,7 @@ class TopMapView(gtk.DrawingArea):
                 direction = 'W'
                 wall_info = self._game_map.get_wall_info(x, y, direction)
                 if wall_info is not None:
-                    if self.have_door(wall_info):
+                    if self._game_map.have_door(x, y, direction):
                         # draw door
                         ctx.move_to(x_pos, y_pos)
                         ctx.line_to(x_pos, y_pos + self._door_width)
@@ -135,14 +135,6 @@ class TopMapView(gtk.DrawingArea):
             fill = (1, 0, 0)
             ctx.set_source_rgb(*fill)
             ctx.fill()
-
-    def have_door(self, wall_info):
-        _have_door = False
-        for wall_object in wall_info:
-            if wall_object.startswith('door'):
-                _have_door = True
-                break
-        return _have_door
 
 
 def main():
