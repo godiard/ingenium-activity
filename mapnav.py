@@ -9,6 +9,7 @@ import gtk
 import gobject
 import cairo
 import logging
+import rsvg
 
 from sugar.graphics.style import Color
 
@@ -97,11 +98,32 @@ class MapNavView(gtk.DrawingArea):
         self.draw(ctx)
         return False
 
+    def update_wall_info(self, x, y, direction):
+        key = str(x) + direction + str(y)
+        if key in self.cache_info:
+            del self.cache_info[key]
+        self.queue_draw()
+
     def get_information_walls(self, x, y, direction):
         key = str(x) + direction + str(y)
         if key in self.cache_info:
             return self.cache_info[key]
         else:
+            wall_objects = []
+            objects = self._game_map.get_wall_info(x, y, direction)
+            for wall_object in objects:
+                image_file_name = wall_object['image_file_name']
+                wall_x, wall_y = wall_object['x'], wall_object['y']
+                width, height = wall_object['width'], wall_object['height']
+                # create a new dict to add the svg handle
+                # can't be in the model because can't be put in the json
+                new_dict = {}
+                new_dict.update(wall_object)
+                if not 'image_cache' in wall_object:
+                    svg = rsvg.Handle(file=image_file_name)
+                    new_dict['image_cache'] = svg
+                wall_objects.append(new_dict)
+
             # have door?
             have_door = self._game_map.have_door(x, y, direction)
             # there are a page at cw direction?
@@ -115,7 +137,8 @@ class MapNavView(gtk.DrawingArea):
             # Wall color?
             wall_color = self._game_map.get_wall_color(x, y)
             info = {'have_door': have_door, 'wall_cw': wall_cw,
-                    'wall_ccw': wall_ccw, 'wall_color': wall_color}
+                    'wall_ccw': wall_ccw, 'wall_color': wall_color,
+                    'objects': wall_objects}
             self.cache_info[key] = info
             return info
 
@@ -181,6 +204,14 @@ class MapNavView(gtk.DrawingArea):
             ctx.fill_preserve()
             ctx.set_source_rgb(*stroke)
             ctx.stroke()
+
+        if info_walls['objects']:
+            for wall_object in info_walls['objects']:
+                image_file_name = wall_object['image_file_name']
+                wall_x, wall_y = wall_object['x'], wall_object['y']
+                width, height = wall_object['width'], wall_object['height']
+                svg = wall_object['image_cache']
+                svg.render_cairo(ctx)
 
     def draw_door(self, ctx, x):
         y = self._height - self._grid_size * (self._door_height + 1)

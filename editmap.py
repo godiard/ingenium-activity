@@ -46,12 +46,14 @@ class EditMapWin(gtk.HBox):
         self.load_resources()
 
         # furniture
-        self._furniture_store = gtk.ListStore(str, gtk.gdk.Pixbuf)
+        self._furniture_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
         self._furniture_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
         furniture_iconview = gtk.IconView(self._furniture_store)
         furniture_iconview.set_text_column(0)
         furniture_iconview.set_pixbuf_column(1)
         self.load_furniture()
+        furniture_iconview.connect("item-activated",
+                self.__furniture_activated_cb)
 
         scrolled1 = gtk.ScrolledWindow()
         scrolled1.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
@@ -88,4 +90,17 @@ class EditMapWin(gtk.HBox):
                 logging.error('Adding %s', image_file_name)
                 pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name,
                         100, 100)
-                self._furniture_store.append(['', pxb])
+                self._furniture_store.append(['', pxb, image_file_name])
+
+    def __furniture_activated_cb(self, widget, item):
+        model = widget.get_model()
+        image_file_name = model[item][2]
+        logging.error('Image %s selected', image_file_name)
+        x = self.nav_view.x
+        y = self.nav_view.y
+        direction = self.nav_view.direction
+        wall_object = {'image_file_name': image_file_name,
+                'x': 100, 'y': 100, 'width': 200, 'height': 200}
+
+        self.game_map.add_object_to_wall(x, y, direction, wall_object)
+        self.nav_view.update_wall_info(x, y, direction)

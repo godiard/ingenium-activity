@@ -156,6 +156,28 @@ class GameMap():
                 return wall['objects']
         return []
 
+    def add_object_to_wall(self, x, y, direction, wall_object):
+        """ Add a object to the array of objects associated to a defined wall
+        """
+        # verify if there are a wall in the requested position
+        actual_room = self.get_room(x, y)
+        next_room = self.get_next_room(x, y, direction)
+        # if the two rooms are the same, there are no wall
+        if next_room is not None and actual_room == next_room:
+            return None
+        # Search in walls data
+        found = False
+        for wall in self.data['walls']:
+            if wall['position'] == [x, y, direction]:
+                if not 'objects' in wall:
+                    wall['objects'] = []
+                wall['objects'].append(wall_object)
+                found = True
+        if not found:
+            wall_info = {'position': [x, y, direction], 'objects': []}
+            wall_info['objects'].append(wall_object)
+            self.data['walls'].append(wall_info)
+
     def get_wall_color(self, x, y):
         room = self.get_room(x, y)
         return self.data['rooms'][room]['wall_color']
