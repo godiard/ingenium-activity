@@ -195,14 +195,20 @@ class MapNavView(gtk.DrawingArea):
             objects = self._game_map.get_wall_info(x, y, direction)
             for wall_object in objects:
                 image_file_name = wall_object['image_file_name']
-                # create a new dict to add the svg handle
-                # can't be in the model because can't be put in the json
                 new_dict = {}
                 new_dict.update(wall_object)
-                if not 'image_cache' in wall_object:
-                    svg = rsvg.Handle(file=image_file_name)
-                    new_dict['image_cache'] = svg
                 new_dict['original'] = wall_object
+                if image_file_name.endswith('.svg'):
+                    # create a new dict to add the svg handle
+                    # can't be in the model because can't be put in the json
+                    if not 'svg_image_cache' in wall_object:
+                        svg = rsvg.Handle(file=image_file_name)
+                        new_dict['svg_image_cache'] = svg
+                else:
+                    if not 'pxb_image_cache' in wall_object:
+                        pxb = gtk.gdk.pixbuf_new_from_file(image_file_name)
+                        new_dict['pxb_image_cache'] = pxb
+
                 wall_objects.append(new_dict)
 
             # have door?
@@ -292,15 +298,26 @@ class MapNavView(gtk.DrawingArea):
                 wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
                 logging.error('Drawing object at %d %d', wall_x, wall_y)
                 scale = wall_object['scale']
-                svg = wall_object['image_cache']
-                width = svg.props.width * scale / 100.0
-                height = svg.props.height * scale / 100.0
+                image_file_name = wall_object['image_file_name']
+                ctx.save()
+                if image_file_name.endswith('.svg'):
+                    svg = wall_object['svg_image_cache']
+                    width = svg.props.width * scale / 100.0
+                    height = svg.props.height * scale / 100.0
+                    ctx.translate(wall_x, wall_y)
+                    ctx.scale(scale / 100.0, scale / 100.0)
+                    svg.render_cairo(ctx)
+                else:
+                    pxb = wall_object['pxb_image_cache']
+                    width = pxb.get_width() * scale / 100.0
+                    height = pxb.get_height() * scale / 100.0
+                    ctx.translate(wall_x, wall_y)
+                    ctx.scale(scale / 100.0, scale / 100.0)
+                    ctx.set_source_pixbuf(pxb, 0, 0)
+                    ctx.paint()
                 wall_object['width'] = width
                 wall_object['height'] = height
-                ctx.save()
-                ctx.translate(wall_x, wall_y)
-                ctx.scale(scale / 100.0, scale / 100.0)
-                svg.render_cairo(ctx)
+
                 ctx.restore()
                 if self.mode == self.MODE_EDIT and \
                     self.selected is not None and \

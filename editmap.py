@@ -39,12 +39,14 @@ class EditMapWin(gtk.HBox):
         rigth_vbox.pack_start(notebook, True, True)
 
         # resources
-        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf)
+        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
         self._resources_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        resources_iconview = gtk.IconView(self._resources_store)
-        resources_iconview.set_text_column(0)
-        resources_iconview.set_pixbuf_column(1)
+        self.resources_iconview = gtk.IconView(self._resources_store)
+        self.resources_iconview.set_text_column(0)
+        self.resources_iconview.set_pixbuf_column(1)
         self.load_resources()
+        self.resources_iconview.connect('item-activated',
+                self.__iconview_activated_cb)
 
         # furniture
         self._furniture_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
@@ -54,11 +56,11 @@ class EditMapWin(gtk.HBox):
         self.furniture_iconview.set_pixbuf_column(1)
         self.load_furniture()
         self.furniture_iconview.connect('item-activated',
-                self.__furniture_activated_cb)
+                self.__iconview_activated_cb)
 
         scrolled1 = gtk.ScrolledWindow()
         scrolled1.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-        scrolled1.add_with_viewport(resources_iconview)
+        scrolled1.add_with_viewport(self.resources_iconview)
         notebook.append_page(scrolled1, gtk.Label(_('Resources')))
         scrolled2 = gtk.ScrolledWindow()
         scrolled2.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
@@ -76,10 +78,11 @@ class EditMapWin(gtk.HBox):
         logging.error('Loading resources')
         for resource in self.model.data['resources']:
             title = resource['title']
-            file_image = resource['file_image']
-            logging.error('Adding %s %s', title, file_image)
-            pxb = gtk.gdk.pixbuf_new_from_file_at_size(file_image, 100, 100)
-            self._resources_store.append([title, pxb])
+            image_file_name = resource['file_image']
+            logging.error('Adding %s %s', title, image_file_name)
+            pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, 100,
+                    100)
+            self._resources_store.append([title, pxb, image_file_name])
 
     def load_furniture(self):
         images_path = os.path.join(activity.get_bundle_path(),
@@ -93,7 +96,7 @@ class EditMapWin(gtk.HBox):
                         100, 100)
                 self._furniture_store.append(['', pxb, image_file_name])
 
-    def __furniture_activated_cb(self, widget, item):
+    def __iconview_activated_cb(self, widget, item):
         model = widget.get_model()
         image_file_name = model[item][2]
         self._add_image(image_file_name)
@@ -113,6 +116,10 @@ class EditMapWin(gtk.HBox):
         if self.furniture_iconview.is_focus():
             item = self.furniture_iconview.get_selected_items()[0][0]
             image_file_name = self._furniture_store[item][2]
+            self._add_image(image_file_name)
+        if self.resources_iconview.is_focus():
+            item = self.resources_iconview.get_selected_items()[0][0]
+            image_file_name = self._resources_store[item][2]
             self._add_image(image_file_name)
 
     def remove_selected_object(self):
