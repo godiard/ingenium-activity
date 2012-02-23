@@ -74,8 +74,9 @@ class EditMapWin(gtk.HBox):
     def show_position(self, nav_view, x, y, direction, top_view):
         self.top_view.show_position(x, y, direction)
 
-    def load_resources(self):
+    def load_resources(self, origin=None):
         logging.error('Loading resources')
+        self._resources_store.clear()
         for resource in self.model.data['resources']:
             title = resource['title']
             image_file_name = resource['file_image']

@@ -224,6 +224,11 @@ class IngeniumMachinaActivity(activity.Activity):
             self.edit_map_win = EditMapWin(self.model)
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.edit_map_win)
+            # connect signal to know if the resources are updated
+            if self.collect_resources_win is not None:
+                logging.error('Connecting signal resource_updated')
+                self.collect_resources_win.connect('resource_updated',
+                        self.edit_map_win.load_resources)
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_MAP_ACTION
 

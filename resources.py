@@ -7,12 +7,18 @@ import shutil
 
 from gettext import gettext as _
 
+from gobject import SIGNAL_RUN_FIRST
+
 from sugar.activity import activity
 from sugar.graphics.icon import Icon
 from sugar.graphics.objectchooser import ObjectChooser
 
 
 class CollectResourcesWin(gtk.HBox):
+
+    __gsignals__ = {
+        'resource_updated': (SIGNAL_RUN_FIRST, None, [])
+    }
 
     def __init__(self, activity):
         self._activity = activity
@@ -204,12 +210,14 @@ class CollectResourcesWin(gtk.HBox):
         # TODO
         if self._selected_key is not None:
             logging.debug('select key %s', self._selected_key)
+            model, tree_iter = \
+                    self.resource_listview.get_selection().get_selected()
+            model.remove(tree_iter)
             self.model.data['resources'].remove(self._get_resource(
                                                         self._selected_key))
-            self.treemodel.remove(
-                        self.resource_listview.get_selection())
             self._modified_data = False
             self._selected_key = None
+            self.emit('resource_updated')
 
     def add_resource(self):
         if self._modified_data:
@@ -221,3 +229,4 @@ class CollectResourcesWin(gtk.HBox):
                     'file_image': '',
                     'file_text': ''}
         self._display_resource(resource)
+        self.emit('resource_updated')
