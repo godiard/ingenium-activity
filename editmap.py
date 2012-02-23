@@ -111,6 +111,7 @@ class EditMapWin(gtk.HBox):
 
         self.game_map.add_object_to_wall(x, y, direction, wall_object)
         self.nav_view.update_wall_info(x, y, direction)
+        self.nav_view.grab_focus()
 
     def add_selected_object(self):
         if self.furniture_iconview.is_focus():
@@ -124,3 +125,4 @@ class EditMapWin(gtk.HBox):
 
     def remove_selected_object(self):
         self.nav_view.remove_selected_object()
+        self.nav_view.grab_focus()
