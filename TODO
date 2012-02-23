@@ -1,9 +1,8 @@
-
+PENDIENTE:
 
 Edicion
 
 * Grabar mime type
-* Agregar/Quitar/mover recursos.
 * Nombres de habitaciones
 * Preguntas graficas
 
@@ -13,3 +12,11 @@ Juego
 * Personaje
 * Popup de preguntas
 * Control de preguntas correctas/incorrectas fin de juego.
+
+HECHO:
+
+Edicion
+
+* Agregar/Quitar/mover recursos.
+* Actualizar la lista de recursos en la edicion del mapa cuando se modifican.
+
