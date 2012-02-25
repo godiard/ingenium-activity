@@ -25,6 +25,7 @@ class EditMapWin(gtk.HBox):
 
         self.model.data['map_data'] = self.game_map.data
 
+        left_vbox = gtk.VBox()
         self.nav_view = MapNavView(self.game_map)
         self.nav_view.mode = MapNavView.MODE_EDIT
         self.top_view = TopMapView(self.game_map, 150, 150)
@@ -32,7 +33,21 @@ class EditMapWin(gtk.HBox):
                 self.nav_view.direction)
         self.nav_view.connect('position-changed', self.show_position,
                 self.top_view)
-        self.pack_start(self.nav_view, True, True)
+
+        name_box = gtk.HBox()
+        name_box.pack_start(gtk.Label(_('Room name')), False, False, padding=5)
+        self.room_name_entry = gtk.Entry()
+        self.room_name_entry.connect('focus-in-event', self.__room_name_in_cb)
+        self.room_name_entry.connect('focus-out-event',
+                self.__room_name_out_cb)
+        self._room_name = ''
+
+        name_box.pack_start(self.room_name_entry, True, True, padding=5)
+
+        left_vbox.pack_start(name_box, False, False, padding=5)
+        left_vbox.pack_start(self.nav_view, True, True)
+
+        self.pack_start(left_vbox, True, True)
         rigth_vbox = gtk.VBox()
         rigth_vbox.pack_start(self.top_view, False, False)
         notebook = gtk.Notebook()
@@ -69,10 +84,28 @@ class EditMapWin(gtk.HBox):
 
         self.pack_start(rigth_vbox, False, False)
         self.nav_view.grab_focus()
+
+        # init room name
+        room_key = self.game_map.get_room(self.nav_view.x, self.nav_view.y)
+        self.room_name = self.game_map.get_room_name(room_key)
+        self.room_name_entry.set_text(self.room_name)
+
         self.show_all()
+
+    def __room_name_in_cb(self, widget, event):
+        self.room_name = widget.get_text()
+
+    def __room_name_out_cb(self, widget, event):
+        if widget.get_text() != self.room_name:
+            # TODO: save the name in the model
+            room_key = self.game_map.get_room(self.nav_view.x, self.nav_view.y)
+            self.game_map.set_room_name(room_key, widget.get_text())
 
     def show_position(self, nav_view, x, y, direction, top_view):
         self.top_view.show_position(x, y, direction)
+        room_key = self.game_map.get_room(self.nav_view.x, self.nav_view.y)
+        room_name = self.game_map.get_room_name(room_key)
+        self.room_name_entry.set_text(room_name)
 
     def load_resources(self, origin=None):
         logging.error('Loading resources')

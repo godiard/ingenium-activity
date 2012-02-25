@@ -85,6 +85,15 @@ class GameMap():
         room_key = self.data['cells'][y][x]
         return room_key
 
+    def set_room_name(self, room_key, room_name):
+        self.data['rooms'][room_key]['room_name'] = room_name
+
+    def get_room_name(self, room_key):
+        if 'room_name' in self.data['rooms'][room_key]:
+            return self.data['rooms'][room_key]['room_name']
+        else:
+            return ''
+
     def get_next_coords(self, x, y, direction):
         if direction == 'N':
             y -= 1
