@@ -2,12 +2,14 @@ PENDIENTE:
 
 Edicion
 
-* Grabar mime type
-* Nombres de habitaciones
 * Preguntas graficas
+* Agregar preguntas al mapa
+* Agregar pantallas para cargar las consignas iniciales y la palabra clave.
 
 Juego
 
+* Mejorar el modo juego en mapnav (no se maneja con teclas, navegar con el mouse,
+  agregar eventos por click en objetos)
 * Sprite animado
 * Personaje
 * Popup de preguntas
@@ -19,4 +21,7 @@ Edicion
 
 * Agregar/Quitar/mover recursos.
 * Actualizar la lista de recursos en la edicion del mapa cuando se modifican.
+* Editar nombres de las habitaciones.
+* Grabar mime type
+* Mostrar nombres de habitaciones en las puertas
 
