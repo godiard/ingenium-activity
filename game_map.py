@@ -94,6 +94,20 @@ class GameMap():
         else:
             return ''
 
+    def get_door_info(self, door_name, direction):
+        if not 'doors' in self.data:
+            self.data['doors'] = {}
+        key = door_name + '_' + direction
+        if not key in self.data['doors']:
+            self.data['doors'][key] = {}
+        return self.data['doors'][key]
+
+    def set_door_info(self, door_name, direction, door_info):
+        if not 'doors' in self.data:
+            self.data['doors'] = {}
+        key = door_name + '_' + direction
+        self.data['doors'][key] = door_info
+
     def get_next_coords(self, x, y, direction):
         if direction == 'N':
             y -= 1
@@ -267,9 +281,11 @@ class GameMap():
         # Search in walls data
         for wall in self.data['walls']:
             if wall['position'] == [x, y, direction]:
-                return 'doors' in wall and len(wall['doors']) > 0
+                if 'doors' in wall and len(wall['doors']) > 0:
+                    return wall['doors']
+                else:
+                    return []
         # look for information in the other side of the room too.
-        # (only valid for doors)
         if next_room is not None:
             reversed_direction = self.get_reversed_direction(direction)
             x2, y2 = self.get_next_coords(x, y, direction)
@@ -277,9 +293,12 @@ class GameMap():
                 return []
             for wall in self.data['walls']:
                 if wall['position'] == [x2, y2, reversed_direction]:
-                    return 'doors' in wall and len(wall['doors']) > 0
+                    if 'doors' in wall and len(wall['doors']) > 0:
+                        return wall['doors']
+                    else:
+                        return []
         # Nothing found
-        return False
+        return []
 
 
 # testing

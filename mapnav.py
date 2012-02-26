@@ -180,11 +180,12 @@ class MapNavView(gtk.DrawingArea):
         self.draw(ctx)
         return False
 
-    def update_wall_info(self, x, y, direction):
+    def update_wall_info(self, x, y, direction, redraw=True):
         key = str(x) + direction + str(y)
         if key in self.cache_info:
             del self.cache_info[key]
-        self.queue_draw()
+        if redraw:
+            self.queue_draw()
 
     def get_information_walls(self, x, y, direction):
         key = str(x) + direction + str(y)
@@ -255,14 +256,14 @@ class MapNavView(gtk.DrawingArea):
         ctx.set_source_rgb(*stroke)
         ctx.stroke()
 
-        if info_walls['have_door']:
+        if info_walls['have_door'] != []:
             if self.direction in ('N', 'W'):
                 # door is at rigth of the wall
                 x = self._width - self._grid_size * (self._door_width + 2)
             else:
                 x = self._grid_size * 2
 
-            self.draw_door(ctx, x)
+            self.draw_door(ctx, x, info_walls['have_door'])
 
         if info_walls['wall_cw']:
             ctx.move_to(self._width - self._grid_size, 0)
@@ -334,7 +335,7 @@ class MapNavView(gtk.DrawingArea):
                             RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE)
                     ctx.stroke()
 
-    def draw_door(self, ctx, x):
+    def draw_door(self, ctx, x, doors):
         y = self._height - self._grid_size * (self._door_height + 1)
         ctx.rectangle(x, y, self._grid_size * self._door_width,
                 self._grid_size * self._door_height)
@@ -368,6 +369,67 @@ class MapNavView(gtk.DrawingArea):
 
         ctx.rectangle(x_handle, y_handle, frame_width, frame_width / 4)
         ctx.fill()
+
+        # draw room name
+        room_key = self._game_map.get_next_room(self.x, self.y, self.direction)
+        room_name = self._game_map.get_room_name(room_key)
+        if room_name != '':
+            x_text = x + self._grid_size * self._door_width / 2
+            y_text = y + self._grid_size * self._door_height / 4
+            door_info = self._game_map.get_door_info(doors[0], self.direction)
+            if 'room_name' in door_info:
+                # check if the room  name has changed
+                if door_info['room_name'] != room_name:
+                    door_info = {}
+            if 'font_size' in door_info:
+                font_size = door_info['font_size']
+                logging.error('take font_size from door_info %d', font_size)
+            else:
+                max_width = self._grid_size * self._door_width / 2
+                font_size = self.calculate_font_size(ctx, max_width, room_name)
+                door_info['font_size'] = font_size
+                door_info['room_name'] = room_name
+                self._game_map.set_door_info(doors[0], self.direction,
+                        door_info)
+                self.update_wall_info(self.x, self.y, self.direction,
+                        redraw=False)
+            self.draw_centered_text(ctx, x_text, y_text, room_name, font_size)
+
+    def calculate_font_size(self, ctx, max_width, text):
+        # get the widest row
+        font_size = 20
+        ctx.set_font_size(font_size)
+        widest_row = ''
+        max_row_width = 0
+        rows = text.split()
+        for row in rows:
+            xbearing, ybearing, width, height, xadvance, yadvance = \
+                    ctx.text_extents(row)
+            if width > max_row_width:
+                widest_row = row
+                max_row_width = width
+        # calculate font size
+        xbearing, ybearing, width, height, xadvance, yadvance = \
+                ctx.text_extents(widest_row)
+
+        while width > max_width:
+            font_size -= 1
+            ctx.set_font_size(font_size)
+            xbearing, ybearing, width, height, xadvance, yadvance = \
+                    ctx.text_extents(widest_row)
+        return font_size
+
+    def draw_centered_text(self, ctx, x, y, text, font_size):
+        ctx.set_source_rgb(0, 0, 0)
+        ctx.set_font_size(font_size)
+        rows = text.split()
+        for i, row in enumerate(rows):
+            xbearing, ybearing, width, height, xadvance, yadvance = \
+            ctx.text_extents(row.replace(" ", "-"))
+            ctx.move_to(x - width / 2 - 1,
+                y + (i + 1) * height)
+            ctx.show_text(row)
+        ctx.stroke()
 
 
 def show_position(nav_view, x, y, direction, top_view):
