@@ -419,15 +419,37 @@ class MapNavView(gtk.DrawingArea):
                     ctx.text_extents(widest_row)
         return font_size
 
-    def draw_centered_text(self, ctx, x, y, text, font_size):
-        ctx.set_source_rgb(0, 0, 0)
+    def draw_centered_text(self, ctx, x, y, text, font_size, with_border=True):
         ctx.set_font_size(font_size)
         rows = text.split()
+
+        # calc text size
+        if with_border:
+            ctx.save()
+            text_width = 0
+            text_height = 0
+            for i, row in enumerate(rows):
+                logging.error('row "%s"', row)
+                xbearing, ybearing, width, height, xadvance, yadvance = \
+                ctx.text_extents(row.replace(" ", "-"))
+                text_height = text_height + height
+                if width > text_width:
+                    text_width = width
+            margin = self._grid_size * self._door_width / 12
+            ctx.rectangle(x - text_width / 2 - margin,
+                    y - (text_height / 2),
+                    text_width + margin * 2, text_height + margin)
+            ctx.set_source_rgb(1, 1, 1)
+            ctx.fill_preserve()
+            ctx.set_source_rgb(0, 0, 0)
+            ctx.stroke()
+            ctx.restore()
+
+        ctx.set_source_rgb(0, 0, 0)
         for i, row in enumerate(rows):
             xbearing, ybearing, width, height, xadvance, yadvance = \
             ctx.text_extents(row.replace(" ", "-"))
-            ctx.move_to(x - width / 2 - 1,
-                y + (i + 1) * height)
+            ctx.move_to(x - width / 2, y + (i - len(rows) / 2 + 1) * height)
             ctx.show_text(row)
         ctx.stroke()
 
