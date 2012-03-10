@@ -45,7 +45,7 @@ class MapNavView(gtk.DrawingArea):
         self.y = 0
         self.direction = 'S'
         self.cache_info = {}
-        self.mode = self.MODE_PLAY
+        self.view_mode = self.MODE_PLAY
         self.selected = None
         super(MapNavView, self).__init__()
         self.set_can_focus(True)
@@ -100,7 +100,7 @@ class MapNavView(gtk.DrawingArea):
         return True
 
     def __button_press_event_cb(self, widget, event):
-        if self.mode == self.MODE_EDIT:
+        if self.view_mode == self.MODE_EDIT:
             info_walls = self.get_information_walls(self.x, self.y,
                     self.direction)
             for wall_object in info_walls['objects']:
@@ -128,7 +128,7 @@ class MapNavView(gtk.DrawingArea):
                     self.update_wall_info(self.x, self.y, self.direction)
 
     def __motion_notify_event_cb(self, widget, event):
-        if self.mode == self.MODE_EDIT:
+        if self.view_mode == self.MODE_EDIT:
             if self.selected is not None:
                 # move the object
                 # TODO: control limits
@@ -320,7 +320,7 @@ class MapNavView(gtk.DrawingArea):
                 wall_object['height'] = height
 
                 ctx.restore()
-                if self.mode == self.MODE_EDIT and \
+                if self.view_mode == self.MODE_EDIT and \
                     self.selected is not None and \
                     self.selected.data['original'] == wall_object['original']:
                     # draw controls
