@@ -125,7 +125,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self.edit_map_win = None
 
         # init game
-        self.mode = PLAY_MODE
+        self.activity_mode = PLAY_MODE
         self.action = EDIT_RESOURCES_ACTION
         self.update_buttons_state()
         self.main_notebook = gtk.Notebook()
@@ -154,7 +154,7 @@ class IngeniumMachinaActivity(activity.Activity):
 
     def __change_mode_cb(self, button):
         if button.get_active():
-            self.mode = EDIT_MODE
+            self.activity_mode = EDIT_MODE
             if self.action == EDIT_RESOURCES_ACTION:
                 self.__resources_button_cb(self._resources_button)
             elif self.action == EDIT_QUESTIONS_ACTION:
@@ -163,7 +163,7 @@ class IngeniumMachinaActivity(activity.Activity):
                 self.main_notebook.set_current_page(0)
 
         else:
-            self.mode = PLAY_MODE
+            self.activity_mode = PLAY_MODE
             self.main_notebook.set_current_page(0)
         self.update_buttons_state()
 
@@ -188,12 +188,13 @@ class IngeniumMachinaActivity(activity.Activity):
             self.edit_map_win.remove_selected_object()
 
     def update_buttons_state(self):
-        self._resources_button.set_sensitive(self.mode == EDIT_MODE)
-        self._questions_button.set_sensitive(self.mode == EDIT_MODE)
-        self._map_button.set_sensitive(self.mode == EDIT_MODE)
-        self._descriptions_button.set_sensitive(self.mode == EDIT_MODE)
-        self._add_button.set_sensitive(self.mode == EDIT_MODE)
-        self._remove_button.set_sensitive(self.mode == EDIT_MODE)
+        edit_mode = self.activity_mode == EDIT_MODE
+        self._resources_button.set_sensitive(edit_mode)
+        self._questions_button.set_sensitive(edit_mode)
+        self._map_button.set_sensitive(edit_mode)
+        self._descriptions_button.set_sensitive(edit_mode)
+        self._add_button.set_sensitive(edit_mode)
+        self._remove_button.set_sensitive(edit_mode)
 
     def _insert_radio(self, group, icon_name, label):
         button = RadioToolButton()
