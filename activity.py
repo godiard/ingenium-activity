@@ -36,6 +36,8 @@ from model import GameModel
 from resources import CollectResourcesWin
 from questions import PrepareQuestionsWin
 from editmap import EditMapWin
+from mapnav import MapNavView
+from game_map import GameMap
 
 from sugar.graphics.xocolor import XoColor
 sys.path.append('..')  # import sugargame package from top directory.
@@ -123,6 +125,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self.collect_resources_win = None
         self.prepare_questions_win = None
         self.edit_map_win = None
+        self.edit_descriptions_win = None
 
         # init game
         self.activity_mode = PLAY_MODE
@@ -159,6 +162,8 @@ class IngeniumMachinaActivity(activity.Activity):
                 self.__resources_button_cb(self._resources_button)
             elif self.action == EDIT_QUESTIONS_ACTION:
                 self.__questions_button_cb(self._questions_button)
+            elif self.action == EDIT_DESCRIPTIONS_ACTION:
+                self.__descriptions_button_cb(self._descriptions_button)
             else:
                 self.main_notebook.set_current_page(0)
 
@@ -234,7 +239,25 @@ class IngeniumMachinaActivity(activity.Activity):
         self.action = EDIT_MAP_ACTION
 
     def __descriptions_button_cb(self, button):
-        self.main_notebook.set_current_page(0)
+        if self.edit_descriptions_win is None:
+
+            # TODO: Temporary use this page to show a mapview in play mode
+            # later will be moved to the page 0 and we will add the
+            # descriptions qpage here
+            if not 'map_data' in self.model.data or \
+                self.model.data['map_data'] is None:
+                self.game_map = GameMap()
+            else:
+                self.game_map = GameMap(self.model.data['map_data'])
+            self.edit_descriptions_win = MapNavView(self.game_map)
+            self.edit_descriptions_win.view_mode = MapNavView.MODE_PLAY
+            self.edit_descriptions_win.show()
+
+            button.page = self.main_notebook.get_n_pages()
+            self.main_notebook.append_page(self.edit_descriptions_win)
+            # connect signal to know if the resources are updated
+
+        self.main_notebook.set_current_page(button.page)
         self.action = EDIT_DESCRIPTIONS_ACTION
 
     def read_file(self, file_path):
