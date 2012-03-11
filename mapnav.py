@@ -38,8 +38,7 @@ class MapNavView(gtk.DrawingArea):
                     'map-updated': (gobject.SIGNAL_RUN_FIRST,
                           gobject.TYPE_NONE,
                           ([gobject.TYPE_INT, gobject.TYPE_INT,
-                            gobject.TYPE_STRING])),}
-
+                            gobject.TYPE_STRING]))}
 
     MODE_PLAY = 0
     MODE_EDIT = 1
@@ -110,6 +109,7 @@ class MapNavView(gtk.DrawingArea):
                     self.direction)
             for wall_object in info_walls['objects']:
                 wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
+                wall_x, wall_y = self.wall_to_view(wall_x, wall_y)
                 width, height = wall_object['width'], wall_object['height']
                 # check if is over the image
                 if wall_x < event.x < wall_x + width and \
@@ -138,10 +138,11 @@ class MapNavView(gtk.DrawingArea):
                 # move the object
                 # TODO: control limits
                 if self.selected.mode == SELECTION_MODE_MOVE:
-                    self.selected.data['original']['wall_x'] = event.x + \
-                            self.selected.dx
-                    self.selected.data['original']['wall_y'] = event.y + \
-                            self.selected.dy
+                    x = event.x + self.selected.dx
+                    y = event.y + self.selected.dy
+                    wall_x, wall_y = self.view_to_wall(x, y)
+                    self.selected.data['original']['wall_x'] = wall_x
+                    self.selected.data['original']['wall_y'] = wall_y
                     self.update_wall_info(self.x, self.y, self.direction)
                 elif self.selected.mode == SELECTION_MODE_RESIZE:
                     if event.x > self.selected.x and event.y > self.selected.y:
@@ -164,6 +165,22 @@ class MapNavView(gtk.DrawingArea):
                     self.direction, wall_object)
             self.update_wall_info(self.x, self.y, self.direction)
             self.selected = None
+
+    def view_to_wall(self, x, y):
+        # receive int, int and return
+        # float, float from 0 to 100 relative
+        # to the height and width of the view
+        # we save in the model this values and calculate again before display
+        x2 = float(x) * 100.0 / float(self._width)
+        y2 = float(y) * 100.0 / float(self._height)
+        return x2, y2
+
+    def wall_to_view(self, x, y):
+        # receive float, float from 0 to 100 and return
+        # int, int relative to the height and width of the view
+        x2 = x * float(self._width) / 100.0
+        y2 = y * float(self._height) / 100.0
+        return int(x2), int(y2)
 
     def calculate_sizes(self, width, height):
         self._width = width
@@ -307,6 +324,7 @@ class MapNavView(gtk.DrawingArea):
             for wall_object in info_walls['objects']:
                 image_file_name = wall_object['image_file_name']
                 wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
+                wall_x, wall_y = self.wall_to_view(wall_x, wall_y)
                 logging.error('Drawing object at %d %d', wall_x, wall_y)
                 scale = wall_object['scale']
                 image_file_name = wall_object['image_file_name']
