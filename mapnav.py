@@ -34,7 +34,12 @@ class MapNavView(gtk.DrawingArea):
     __gsignals__ = {'position-changed': (gobject.SIGNAL_RUN_FIRST,
                           gobject.TYPE_NONE,
                           ([gobject.TYPE_INT, gobject.TYPE_INT,
-                            gobject.TYPE_STRING]))}
+                            gobject.TYPE_STRING])),
+                    'map-updated': (gobject.SIGNAL_RUN_FIRST,
+                          gobject.TYPE_NONE,
+                          ([gobject.TYPE_INT, gobject.TYPE_INT,
+                            gobject.TYPE_STRING])),}
+
 
     MODE_PLAY = 0
     MODE_EDIT = 1
@@ -180,10 +185,15 @@ class MapNavView(gtk.DrawingArea):
         self.draw(ctx)
         return False
 
+    def receive_update_wall_info(self, mapnav, x, y, direction):
+        self.update_wall_info(x, y, direction, redraw=False)
+
     def update_wall_info(self, x, y, direction, redraw=True):
         key = str(x) + direction + str(y)
         if key in self.cache_info:
             del self.cache_info[key]
+        if self.view_mode == self.MODE_EDIT:
+            self.emit('map-updated', self.x, self.y, self.direction)
         if redraw:
             self.queue_draw()
 

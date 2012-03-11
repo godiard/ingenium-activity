@@ -126,6 +126,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self.prepare_questions_win = None
         self.edit_map_win = None
         self.edit_descriptions_win = None
+        self.views_connected = False
 
         # init game
         self.activity_mode = PLAY_MODE
@@ -235,6 +236,15 @@ class IngeniumMachinaActivity(activity.Activity):
                 logging.error('Connecting signal resource_updated')
                 self.collect_resources_win.connect('resource_updated',
                         self.edit_map_win.load_resources)
+
+            # Try connect with the playing map
+            if self.edit_descriptions_win is not None and not \
+                    self.views_connected:
+                logging.error('Connecting signal map-updated')
+                self.edit_map_win.nav_view.connect('map-updated',
+                    self.edit_descriptions_win.receive_update_wall_info)
+                self.views_connected = True
+
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_MAP_ACTION
 
@@ -252,6 +262,13 @@ class IngeniumMachinaActivity(activity.Activity):
             self.edit_descriptions_win = MapNavView(self.game_map)
             self.edit_descriptions_win.view_mode = MapNavView.MODE_PLAY
             self.edit_descriptions_win.show()
+
+            # Try connect withthe edition map
+            if self.edit_map_win is not None and not self.views_connected:
+                logging.error('Connecting signal map-updated')
+                self.edit_map_win.nav_view.connect('map-updated',
+                    self.edit_descriptions_win.receive_update_wall_info)
+                self.views_connected = True
 
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.edit_descriptions_win)
