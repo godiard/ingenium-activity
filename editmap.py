@@ -141,7 +141,7 @@ class EditMapWin(gtk.HBox):
         y = self.nav_view.y
         direction = self.nav_view.direction
         wall_object = {'image_file_name': image_file_name,
-                'wall_x': 50.0, 'wall_y': 50.0, 'scale': 50}
+                'wall_x': 50.0, 'wall_y': 50.0, 'wall_scale': 0.2}
 
         self.game_map.add_object_to_wall(x, y, direction, wall_object)
         self.nav_view.update_wall_info(x, y, direction)

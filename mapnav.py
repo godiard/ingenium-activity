@@ -145,13 +145,14 @@ class MapNavView(gtk.DrawingArea):
                     self.selected.data['original']['wall_y'] = wall_y
                     self.update_wall_info(self.x, self.y, self.direction)
                 elif self.selected.mode == SELECTION_MODE_RESIZE:
+                    wall_scale = self.selected.data['original']['wall_scale']
                     if event.x > self.selected.x and event.y > self.selected.y:
-                        if self.selected.data['original']['scale'] >= 10:
-                            self.selected.data['original']['scale'] = \
-                                self.selected.data['original']['scale'] - 1
+                        if wall_scale >= 0.05:
+                            self.selected.data['original']['wall_scale'] = \
+                                wall_scale - 0.01
                     else:
-                        self.selected.data['original']['scale'] = \
-                            self.selected.data['original']['scale'] + 1
+                        self.selected.data['original']['wall_scale'] = \
+                                wall_scale + 0.01
                     self.update_wall_info(self.x, self.y, self.direction)
 
     def __button_release_event_cb(self, widget, event):
@@ -326,22 +327,26 @@ class MapNavView(gtk.DrawingArea):
                 wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
                 wall_x, wall_y = self.wall_to_view(wall_x, wall_y)
                 logging.error('Drawing object at %d %d', wall_x, wall_y)
-                scale = wall_object['scale']
+                wall_scale = wall_object['wall_scale']
                 image_file_name = wall_object['image_file_name']
                 ctx.save()
                 if image_file_name.endswith('.svg'):
                     svg = wall_object['svg_image_cache']
-                    width = svg.props.width * scale / 100.0
-                    height = svg.props.height * scale / 100.0
+                    scale = float(self._height) * wall_scale / \
+                            float(svg.props.height)
+                    width = int(svg.props.width * scale)
+                    height = int(svg.props.height * scale)
                     ctx.translate(wall_x, wall_y)
-                    ctx.scale(scale / 100.0, scale / 100.0)
+                    ctx.scale(scale, scale)
                     svg.render_cairo(ctx)
                 else:
                     pxb = wall_object['pxb_image_cache']
-                    width = pxb.get_width() * scale / 100.0
-                    height = pxb.get_height() * scale / 100.0
+                    scale = float(self._height) * wall_scale / \
+                            float(pxb.get_height())
+                    width = int(pxb.get_width() * scale)
+                    height = int(pxb.get_height() * scale)
                     ctx.translate(wall_x, wall_y)
-                    ctx.scale(scale / 100.0, scale / 100.0)
+                    ctx.scale(scale, scale)
                     ctx.set_source_pixbuf(pxb, 0, 0)
                     ctx.paint()
                 wall_object['width'] = width
