@@ -185,7 +185,7 @@ class MapNavView(gtk.DrawingArea):
     def calculate_sizes(self, width, height):
         self._width = width
         self._height = height
-        # used as unity 1/10 of the height
+        # used as unity 1/12 of the height
         self._grid_size = self._height / 12
         # the door is 3 units width and 6 units hight
         self._door_width = 3
