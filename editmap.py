@@ -54,14 +54,15 @@ class EditMapWin(gtk.HBox):
         rigth_vbox.pack_start(notebook, True, True)
 
         # resources
-        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
+        # store: title, pxb, image_file_name, id_resource
+        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str, str)
         self._resources_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
         self.resources_iconview = gtk.IconView(self._resources_store)
         self.resources_iconview.set_text_column(0)
         self.resources_iconview.set_pixbuf_column(1)
         self.load_resources()
         self.resources_iconview.connect('item-activated',
-                self.__iconview_activated_cb)
+                self.__resource_iconview_activated_cb)
 
         # furniture
         self._furniture_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
@@ -113,10 +114,13 @@ class EditMapWin(gtk.HBox):
         for resource in self.model.data['resources']:
             title = resource['title']
             image_file_name = resource['file_image']
-            logging.error('Adding %s %s', title, image_file_name)
+            id_resource = resource['id_resource']
+            logging.error('Adding %s %s %s', title, image_file_name,
+                    id_resource)
             pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, 100,
                     100)
-            self._resources_store.append([title, pxb, image_file_name])
+            self._resources_store.append([title, pxb, image_file_name,
+                    id_resource])
 
     def load_furniture(self):
         images_path = os.path.join(activity.get_bundle_path(),
@@ -135,14 +139,21 @@ class EditMapWin(gtk.HBox):
         image_file_name = model[item][2]
         self._add_image(image_file_name)
 
-    def _add_image(self, image_file_name):
+    def __resource_iconview_activated_cb(self, widget, item):
+        model = widget.get_model()
+        image_file_name = model[item][2]
+        id_resource = model[item][3]
+        self._add_image(image_file_name, id_resource)
+
+    def _add_image(self, image_file_name, id_resource=None):
         logging.error('Image %s selected', image_file_name)
         x = self.nav_view.x
         y = self.nav_view.y
         direction = self.nav_view.direction
         wall_object = {'image_file_name': image_file_name,
                 'wall_x': 50.0, 'wall_y': 50.0, 'wall_scale': 0.2}
-
+        if id_resource is not None:
+            wall_object['id_resource'] = id_resource
         self.game_map.add_object_to_wall(x, y, direction, wall_object)
         self.nav_view.update_wall_info(x, y, direction)
         self.nav_view.grab_focus()
@@ -155,7 +166,8 @@ class EditMapWin(gtk.HBox):
         if self.resources_iconview.is_focus():
             item = self.resources_iconview.get_selected_items()[0][0]
             image_file_name = self._resources_store[item][2]
-            self._add_image(image_file_name)
+            id_resource = self._resources_store[item][3]
+            self._add_image(image_file_name, id_resource)
 
     def remove_selected_object(self):
         self.nav_view.remove_selected_object()
