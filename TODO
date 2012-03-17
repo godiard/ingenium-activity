@@ -4,7 +4,14 @@ Edicion
 
 * Preguntas graficas
 * Agregar preguntas al mapa
+* Agregar opcion de mostrar un recurso con otro icono (microscopio, libro,
+diario, computadora, xo)
+
 * Agregar pantallas para cargar las consignas iniciales y la palabra clave.
+
+* En la edicion del mapa, limitar las posiciones de los objetos al rectangulo
+de la pared. (No paredes laterales, chequear piso si es posible)
+
 
 Juego
 
@@ -12,6 +19,7 @@ Juego
   agregar eventos por click en objetos)
 * Sprite animado
 * Personaje
+* Popup de resursos
 * Popup de preguntas
 * Control de preguntas correctas/incorrectas fin de juego.
 
@@ -24,4 +32,6 @@ Edicion
 * Editar nombres de las habitaciones.
 * Grabar mime type
 * Mostrar nombres de habitaciones en las puertas
+* los recursos tienen que tener un codigo, y al hacer click en edit mode
+tiene que notificar ese codigo para poder mostrarlo.
 
