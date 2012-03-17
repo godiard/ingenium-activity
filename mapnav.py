@@ -38,7 +38,9 @@ class MapNavView(gtk.DrawingArea):
                     'map-updated': (gobject.SIGNAL_RUN_FIRST,
                           gobject.TYPE_NONE,
                           ([gobject.TYPE_INT, gobject.TYPE_INT,
-                            gobject.TYPE_STRING]))}
+                            gobject.TYPE_STRING])),
+                    'resource-clicked': (gobject.SIGNAL_RUN_FIRST,
+                          gobject.TYPE_NONE, ([gobject.TYPE_STRING]))}
 
     MODE_PLAY = 0
     MODE_EDIT = 1
@@ -104,22 +106,29 @@ class MapNavView(gtk.DrawingArea):
         return True
 
     def __button_press_event_cb(self, widget, event):
-        if self.view_mode == self.MODE_EDIT:
-            info_walls = self.get_information_walls(self.x, self.y,
-                    self.direction)
-            for wall_object in info_walls['objects']:
-                wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
-                wall_x, wall_y = self.wall_to_view(wall_x, wall_y)
-                width, height = wall_object['width'], wall_object['height']
-                # check if is over the image
-                if wall_x < event.x < wall_x + width and \
-                    wall_y < event.y < wall_y + height:
+        info_walls = self.get_information_walls(self.x, self.y,
+                self.direction)
+        for wall_object in info_walls['objects']:
+            wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
+            wall_x, wall_y = self.wall_to_view(wall_x, wall_y)
+            width, height = wall_object['width'], wall_object['height']
+            # check if is over the image
+            if wall_x < event.x < wall_x + width and \
+                wall_y < event.y < wall_y + height:
+                if self.view_mode == self.MODE_EDIT:
+                    # in edit mode prepare to move the object
                     self.selected = SelectedObject()
                     self.selected.data = wall_object
                     self.selected.dx = wall_x - event.x
                     self.selected.dy = wall_y - event.y
                     self.selected.mode = SELECTION_MODE_MOVE
                     self.update_wall_info(self.x, self.y, self.direction)
+                else:
+                    # in play mode trigger event
+                    self.emit('resource-clicked', wall_object['id_resource'])
+
+            if self.view_mode == self.MODE_EDIT:
+                # check resize
                 if wall_x - RESIZE_HANDLE_SIZE / 2 < event.x < \
                         wall_x + RESIZE_HANDLE_SIZE / 2 and \
                     wall_y - RESIZE_HANDLE_SIZE / 2 < event.y < \
@@ -131,6 +140,12 @@ class MapNavView(gtk.DrawingArea):
                     self.selected.x = event.x
                     self.selected.y = event.y
                     self.update_wall_info(self.x, self.y, self.direction)
+
+        if self.view_mode == self.MODE_EDIT:
+            # verify doors
+
+            # verify lateral doors
+            pass
 
     def __motion_notify_event_cb(self, widget, event):
         if self.view_mode == self.MODE_EDIT:

@@ -242,7 +242,7 @@ class IngeniumMachinaActivity(activity.Activity):
                     self.views_connected:
                 logging.error('Connecting signal map-updated')
                 self.edit_map_win.nav_view.connect('map-updated',
-                    self.edit_descriptions_win.receive_update_wall_info)
+                    self.mapnav_game.receive_update_wall_info)
                 self.views_connected = True
 
         self.main_notebook.set_current_page(button.page)
@@ -259,15 +259,19 @@ class IngeniumMachinaActivity(activity.Activity):
                 self.game_map = GameMap()
             else:
                 self.game_map = GameMap(self.model.data['map_data'])
-            self.edit_descriptions_win = MapNavView(self.game_map)
-            self.edit_descriptions_win.view_mode = MapNavView.MODE_PLAY
-            self.edit_descriptions_win.show()
+            self.edit_descriptions_win = gtk.HBox()
+            self.mapnav_game = MapNavView(self.game_map)
+            self.mapnav_game.view_mode = MapNavView.MODE_PLAY
+            self.edit_descriptions_win.add(self.mapnav_game)
+            self.edit_descriptions_win.show_all()
+            self.mapnav_game.connect('resource-clicked',
+                    self.__resource_clicked_cb)
 
             # Try connect withthe edition map
             if self.edit_map_win is not None and not self.views_connected:
                 logging.error('Connecting signal map-updated')
                 self.edit_map_win.nav_view.connect('map-updated',
-                    self.edit_descriptions_win.receive_update_wall_info)
+                    self.mapnav_game.receive_update_wall_info)
                 self.views_connected = True
 
             button.page = self.main_notebook.get_n_pages()
@@ -276,6 +280,9 @@ class IngeniumMachinaActivity(activity.Activity):
 
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_DESCRIPTIONS_ACTION
+
+    def __resource_clicked_cb(self, mapnav, id_resource):
+        logging.error('** Resource %s clicked', id_resource)
 
     def read_file(self, file_path):
         '''Read file from Sugar Journal.'''
