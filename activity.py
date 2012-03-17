@@ -38,6 +38,7 @@ from questions import PrepareQuestionsWin
 from editmap import EditMapWin
 from mapnav import MapNavView
 from game_map import GameMap
+from resourcewindow import ResourceWindow
 
 from sugar.graphics.xocolor import XoColor
 sys.path.append('..')  # import sugargame package from top directory.
@@ -283,6 +284,9 @@ class IngeniumMachinaActivity(activity.Activity):
 
     def __resource_clicked_cb(self, mapnav, id_resource):
         logging.error('** Resource %s clicked', id_resource)
+        resource_win = ResourceWindow(self.model, id_resource, self)
+        resource_win.set_transient_for(self.get_toplevel())
+        resource_win.show_all()
 
     def read_file(self, file_path):
         '''Read file from Sugar Journal.'''
