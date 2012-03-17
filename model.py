@@ -34,6 +34,13 @@ class GameModel:
         self.data['last_resource_id'] = self.data['last_resource_id'] + 1
         return self.data['last_resource_id']
 
+    def get_resource(self, id_resource):
+        for resource in self.data['resources']:
+            if resource['id_resource'] == int(id_resource):
+                return resource
+        logging.error('ERROR: resource %s not found', id_resource)
+        return None
+
     def write(self, file_name):
 
         instance_path = os.path.join(activity.get_activity_root(), 'instance')

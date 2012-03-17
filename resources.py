@@ -157,7 +157,7 @@ class CollectResourcesWin(gtk.HBox):
         self._display_model(self._selected_key)
 
     def _update_model(self, key):
-        resource = self._get_resource(key)
+        resource = self.model.get_resource(key)
         new_entry = False
         if resource == None:
             resource = {}
@@ -181,7 +181,7 @@ class CollectResourcesWin(gtk.HBox):
         return self.editor.get_main_frame().get_title()
 
     def _display_model(self, key):
-        resource = self._get_resource(key)
+        resource = self.model.get_resource(key)
         self._display_resource(resource)
 
     def _display_resource(self, resource):
@@ -202,13 +202,6 @@ class CollectResourcesWin(gtk.HBox):
             self._image_resource_path = None
         self._modified_data = False
 
-    def _get_resource(self, key):
-        for resource in self.model.data['resources']:
-            if resource['id_resource'] == int(key):
-                return resource
-        logging.error('ERROR: resource %s not found', key)
-        return None
-
     def del_resource(self):
         logging.debug('del resource')
         # TODO
@@ -217,7 +210,7 @@ class CollectResourcesWin(gtk.HBox):
             model, tree_iter = \
                     self.resource_listview.get_selection().get_selected()
             model.remove(tree_iter)
-            self.model.data['resources'].remove(self._get_resource(
+            self.model.data['resources'].remove(self.model.get_resource(
                                                         self._selected_key))
             self._modified_data = False
             self._selected_key = None

@@ -14,9 +14,11 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from gettext import gettext as _
+import os
 
 import gobject
 import gtk
+import webkit
 
 from sugar.graphics import style
 from sugar.graphics.toolbutton import ToolButton
@@ -108,5 +110,28 @@ class ResourceDialog(_DialogWindow):
 
     __gtype_name__ = 'ResourceDialog'
 
-    def __init__(self, model, resource_id):
-        super(ResourceDialog, self).__init__(None, 'Show resource')
+    def __init__(self, model, id_resource):
+        resource = model.get_resource(id_resource)
+
+        super(ResourceDialog, self).__init__(None, resource['title'])
+
+        scrollwin = gtk.ScrolledWindow()
+        scrollwin.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        self.content_vbox.pack_start(scrollwin)
+        vbox = gtk.VBox()
+        scrollwin.add_with_viewport(vbox)
+
+        image = gtk.Image()
+        vbox.pack_start(image, False, padding=5)
+        image.set_from_file(resource['file_image'])
+
+        editor = webkit.WebView()
+        editor.set_editable(False)
+        height = int(gtk.gdk.screen_height() / 3)
+        editor.set_size_request(-1, height)
+        vbox.pack_start(editor, False, padding=5)
+
+        if resource['file_text'] != '':
+            if os.path.exists(resource['file_text']):
+                with open(resource['file_text'], 'r') as html_file:
+                    editor.load_html_string(html_file.read(), 'file:///')
