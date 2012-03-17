@@ -104,9 +104,9 @@ class _DialogToolbar(gtk.Toolbar):
         self.emit('stop-clicked')
 
 
-class ResourceWindow(_DialogWindow):
+class ResourceDialog(_DialogWindow):
 
-    __gtype_name__ = 'ResourceWindow'
+    __gtype_name__ = 'ResourceDialog'
 
-    def __init__(self, model, resource_id, parent=None):
-        super(ResourceWindow, self).__init__(None, 'Show resource')
+    def __init__(self, model, resource_id):
+        super(ResourceDialog, self).__init__(None, 'Show resource')
