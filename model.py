@@ -26,8 +26,13 @@ class GameModel:
                     'file_image' = ''
                     'file_text' = ''}
         """
+        self.data['last_resource_id'] = 0
 
         self.data['map_data'] = None
+
+    def get_new_resource_id(self):
+        self.data['last_resource_id'] = self.data['last_resource_id'] + 1
+        return self.data['last_resource_id']
 
     def write(self, file_name):
 

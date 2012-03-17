@@ -42,7 +42,10 @@ class CollectResourcesWin(gtk.HBox):
         self.resource_listview.set_size_request(width, -1)
 
         self.resource_listview.connect('cursor-changed', self.select_resource)
-        self.treemodel = gtk.ListStore(gobject.TYPE_STRING)
+
+        # title and id_resource
+        self.treemodel = gtk.ListStore(gobject.TYPE_STRING,
+                gobject.TYPE_STRING)
         self.resource_listview.set_model(self.treemodel)
         renderer = gtk.CellRendererText()
         renderer.set_property('wrap-mode', gtk.WRAP_WORD)
@@ -96,7 +99,7 @@ class CollectResourcesWin(gtk.HBox):
         self._load_treemodel()
         self.show_all()
         self._modified_data = False
-        self._selected_key = None
+        self._selected_key = self.model.get_new_resource_id()
 
         self._image_resource_path = None
 
@@ -136,22 +139,21 @@ class CollectResourcesWin(gtk.HBox):
         self._modified_data = True
 
     def __information_changed_cb(self, entry):
-        logging.debug('Data modified')
         self._modified_data = True
 
     def _load_treemodel(self):
         logging.error('loading treemodel')
         for resource in self.model.data['resources']:
             logging.error('adding resource %s', resource)
-            self.treemodel.append([resource['title']])
+            self.treemodel.append([resource['title'], resource['id_resource']])
 
     def select_resource(self, treeview):
         treestore, coldex = treeview.get_selection().get_selected()
-        logging.debug('selected resource %s', treestore.get_value(coldex, 0))
+        logging.debug('selected resource %s', treestore.get_value(coldex, 1))
         if self._modified_data:
             # update data
             self._update_model(self._selected_key)
-        self._selected_key = treestore.get_value(coldex, 0)
+        self._selected_key = treestore.get_value(coldex, 1)
         self._display_model(self._selected_key)
 
     def _update_model(self, key):
@@ -166,10 +168,11 @@ class CollectResourcesWin(gtk.HBox):
 
         resource = {'title': self.title_entry.get_text(),
                     'file_image': self._image_resource_path,
-                    'file_text': self._image_resource_path + '.html'}
+                    'file_text': self._image_resource_path + '.html',
+                    'id_resource': key}
         if new_entry:
             self.model.data['resources'].append(resource)
-            self.treemodel.append([self.title_entry.get_text()])
+            self.treemodel.append([self.title_entry.get_text(), key])
         self._modified_data = False
 
     def _get_html(self):
@@ -201,8 +204,9 @@ class CollectResourcesWin(gtk.HBox):
 
     def _get_resource(self, key):
         for resource in self.model.data['resources']:
-            if resource['title'] == key:
+            if resource['id_resource'] == int(key):
                 return resource
+        logging.error('ERROR: resource %s not found', key)
         return None
 
     def del_resource(self):
@@ -224,9 +228,10 @@ class CollectResourcesWin(gtk.HBox):
             # update data
             self._update_model(self._selected_key)
 
-        self._selected_key = None
+        self._selected_key = self.model.get_new_resource_id()
         resource = {'title': '',
                     'file_image': '',
-                    'file_text': ''}
+                    'file_text': '',
+                    'id_resource': self._selected_key}
         self._display_resource(resource)
         self.emit('resource_updated')
