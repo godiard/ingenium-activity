@@ -30,7 +30,9 @@ class CollectResourcesWin(gtk.HBox):
         |         +------------------------------+
         |         | +--------------+ Size        |
         |         | | ImageView    | Load from   |
-        |         | +--------------+ Journal     |
+        |         | |              | Journal     |
+        |         | |              | Show as     |
+        |         | +--------------+ |IconView | |
         |         | +--------------------------+ |
         |         | | Text                     | |
         |         | +--------------------------+ |
@@ -75,16 +77,37 @@ class CollectResourcesWin(gtk.HBox):
         scrollwin.add_with_viewport(self.image)
         hbox_image.pack_start(scrollwin, True, padding=5)
         vbox_image = gtk.VBox()
-        self.load_image_button = gtk.Button('Load Image')
+        self.load_image_button = gtk.Button(_('Load Image'))
         self.load_image_button.connect('clicked', self.__load_image_cb)
         vbox_image.pack_start(self.load_image_button, False, padding=5)
 
-        size_label = gtk.Label('Image size:')
+        size_label = gtk.Label(_('Image size:'))
         vbox_image.pack_start(size_label, False, padding=5)
         self.size_label_value = gtk.Label('')
         vbox_image.pack_start(self.size_label_value, False, padding=5)
         hbox_image.pack_start(vbox_image, False, padding=5)
         vbox.pack_start(hbox_image, True, padding=5)
+
+        # show as icon
+        self.show_as_icon_check = gtk.CheckButton()
+        self._set_show_as_icon_label()
+        self.show_as_icon_check.connect('toggled', self.__show_as_toggled_cb)
+        vbox_image.pack_start(self.show_as_icon_check, False, padding=5)
+
+        self._icons_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
+        self._icons_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        self._iconview = gtk.IconView(self._icons_store)
+        self._iconview.set_text_column(0)
+        self._iconview.set_pixbuf_column(1)
+        self._iconview.set_sensitive(False)
+        self._iconview.set_selection_mode(gtk.SELECTION_SINGLE)
+        self.load_icons()
+        self._iconview.connect('item-activated', self.__iconview_activated_cb)
+        scrolled = gtk.ScrolledWindow()
+        scrolled.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        scrolled.add_with_viewport(self._iconview)
+
+        vbox_image.pack_start(scrolled, True, padding=5)
 
         #hbox_editor = gtk.HBox()
         self.editor = webkit.WebView()
@@ -102,6 +125,39 @@ class CollectResourcesWin(gtk.HBox):
         self._selected_key = self.model.get_new_resource_id()
 
         self._image_resource_path = None
+
+    def __show_as_toggled_cb(self, button):
+        self._iconview.set_sensitive(button.get_active())
+        if not button.get_active():
+            self._set_show_as_icon_label()
+        self._modified_data = True
+
+    def __iconview_activated_cb(self, widget, item):
+        model = widget.get_model()
+        image_file_name = model[item][2]
+        self._set_show_as_icon_label(self._get_image_name(image_file_name))
+
+    def _get_image_name(self, image_file_name):
+        image_name = image_file_name[image_file_name.rfind('/') + 1:]
+        return image_name[:image_name.find('.')]
+
+    def _set_show_as_icon_label(self, text=None):
+        if text is None:
+            self.show_as_icon_check.set_label(_('Show as Icon:'))
+        else:
+            self.show_as_icon_check.set_label(_('Show as %s') % text)
+
+    def load_icons(self):
+        images_path = os.path.join(activity.get_bundle_path(),
+                'images/resource_icons')
+        logging.error('Loading resource icons from %s', images_path)
+        for file_name in os.listdir(images_path):
+            if not file_name.endswith('.txt'):
+                image_file_name = os.path.join(images_path, file_name)
+                logging.error('Adding %s', image_file_name)
+                pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name,
+                        100, 100)
+                self._icons_store.append(['', pxb, image_file_name])
 
     def __load_image_cb(self, button):
         try:
@@ -166,13 +222,22 @@ class CollectResourcesWin(gtk.HBox):
         with open(self._image_resource_path + '.html', 'w') as html_file:
             html_file.write(self._get_html())
 
+        # show_as
+        show_as = None
+        if self.show_as_icon_check.get_active():
+            item = self._iconview.get_selected_items()[0][0]
+            show_as = self._icons_store[item][2]
+
         resource = {'title': self.title_entry.get_text(),
                     'file_image': self._image_resource_path,
                     'file_text': self._image_resource_path + '.html',
+                    'show_as': show_as,
                     'id_resource': key}
+
         if new_entry:
             self.model.data['resources'].append(resource)
             self.treemodel.append([self.title_entry.get_text(), key])
+
         self._modified_data = False
 
     def _get_html(self):
@@ -200,6 +265,12 @@ class CollectResourcesWin(gtk.HBox):
         else:
             self.image.clear()
             self._image_resource_path = None
+
+        # show as
+        self.show_as_icon_check.set_active(resource['show_as'] is not None)
+        self._iconview.set_sensitive(self.show_as_icon_check.get_active())
+        self._set_show_as_icon_label(self._get_image_name(resource['show_as']))
+
         self._modified_data = False
 
     def del_resource(self):
@@ -225,6 +296,7 @@ class CollectResourcesWin(gtk.HBox):
         resource = {'title': '',
                     'file_image': '',
                     'file_text': '',
+                    'show_as': None,
                     'id_resource': self._selected_key}
         self._display_resource(resource)
         self.emit('resource_updated')

@@ -4,25 +4,24 @@ Edicion
 
 * Preguntas graficas
 * Agregar preguntas al mapa
-* Agregar opcion de mostrar un recurso con otro icono (microscopio, libro,
-diario, computadora, xo)
-
 * Agregar pantallas para cargar las consignas iniciales y la palabra clave.
 
 * En la edicion del mapa, limitar las posiciones de los objetos al rectangulo
 de la pared. (No paredes laterales, chequear piso si es posible)
 
+* Si borro un recurso en la pantalla de recursos se tiene que borrar del mapa,
+o no dejar borrar si esta usado en el mapa.
 
 Juego
 
-* Mejorar el modo juego en mapnav (no se maneja con teclas, navegar con el mouse,
-  agregar eventos por click en objetos)
+* Mejorar el modo juego en mapnav (disparar eventos cuando se hace click en una 
+puerta o en las areas laterales para navegar con el mouse)
 * Sprite animado
 * Personaje
-* Popup de resursos
 * Popup de preguntas
 * Control de preguntas correctas/incorrectas fin de juego.
 
+***************************************************************************
 HECHO:
 
 Edicion
@@ -34,4 +33,11 @@ Edicion
 * Mostrar nombres de habitaciones en las puertas
 * los recursos tienen que tener un codigo, y al hacer click en edit mode
 tiene que notificar ese codigo para poder mostrarlo.
+* Agregar opcion de mostrar un recurso con otro icono (microscopio, libro,
+diario, computadora, xo)
 
+
+Juego
+
+* Al hacer click en un recurso, abre una ventana mostrando la informacion.
+* Navegacion con teclas deshabilitado.
