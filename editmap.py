@@ -113,7 +113,11 @@ class EditMapWin(gtk.HBox):
         self._resources_store.clear()
         for resource in self.model.data['resources']:
             title = resource['title']
-            image_file_name = resource['file_image']
+            if resource['show_as'] is None:
+                image_file_name = resource['file_image']
+            else:
+                image_file_name = resource['show_as']
+
             id_resource = resource['id_resource']
             logging.error('Adding %s %s %s', title, image_file_name,
                     id_resource)
