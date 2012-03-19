@@ -2,8 +2,8 @@ PENDIENTE:
 
 Edicion
 
-* Preguntas graficas
 * Agregar preguntas al mapa
+* Preguntas graficas
 * Agregar pantallas para cargar las consignas iniciales y la palabra clave.
 
 * En la edicion del mapa, limitar las posiciones de los objetos al rectangulo
@@ -20,6 +20,11 @@ puerta o en las areas laterales para navegar con el mouse)
 * Personaje
 * Popup de preguntas
 * Control de preguntas correctas/incorrectas fin de juego.
+
+Arte:
+* Telescopio / Ventana dia / Ventana noche
+* Mesa grande / estanteria / biblioteca.
+* Resource icons: diario / libro
 
 ***************************************************************************
 HECHO:
@@ -41,3 +46,4 @@ Juego
 
 * Al hacer click en un recurso, abre una ventana mostrando la informacion.
 * Navegacion con teclas deshabilitado.
+* Mostrar el mapa en el mismo ctx en el modo juego
