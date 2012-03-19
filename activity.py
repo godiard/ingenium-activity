@@ -128,6 +128,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self.edit_map_win = None
         self.edit_descriptions_win = None
         self.views_connected = False
+        self.resources_maps_connected = False
 
         # init game
         self.activity_mode = PLAY_MODE
@@ -224,6 +225,12 @@ class IngeniumMachinaActivity(activity.Activity):
             self.collect_resources_win = CollectResourcesWin(self)
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.collect_resources_win)
+            # connect signal to know if the resources are updated
+            if self.edit_map_win is not None and \
+                    not self.resources_maps_connected:
+                logging.error('Connecting signal resource_updated')
+                self.collect_resources_win.connect('resource_updated',
+                        self.edit_map_win.load_resources)
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_RESOURCES_ACTION
 
@@ -233,7 +240,8 @@ class IngeniumMachinaActivity(activity.Activity):
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.edit_map_win)
             # connect signal to know if the resources are updated
-            if self.collect_resources_win is not None:
+            if self.collect_resources_win is not None and \
+                    not self.resources_maps_connected:
                 logging.error('Connecting signal resource_updated')
                 self.collect_resources_win.connect('resource_updated',
                         self.edit_map_win.load_resources)
