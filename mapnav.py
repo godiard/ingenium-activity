@@ -14,7 +14,7 @@ import rsvg
 from sugar.graphics.style import Color
 
 from game_map import GameMap
-from mapview import TopMapView
+import mapview
 
 WIDTH_CONTROL_LINES = 2
 RESIZE_HANDLE_SIZE = 10
@@ -216,6 +216,13 @@ class MapNavView(gtk.DrawingArea):
                 event.area.height)
         ctx.clip()
         self.draw(ctx)
+
+        if self.view_mode == self.MODE_PLAY:
+            position = {'x': self.x, 'y': self.y, 'direction': self.direction}
+            view_data = {'width': 150, 'height': 150,
+                    'show_position': position, 'x': rect.width - 150, 'y': 30}
+            mapview.draw(ctx, self._game_map, view_data)
+
         return False
 
     def receive_update_wall_info(self, mapnav, x, y, direction):
@@ -510,7 +517,7 @@ def main():
     window = gtk.Window()
     game_map = GameMap()
     nav_view = MapNavView(game_map)
-    top_view = TopMapView(game_map, 200, 200)
+    top_view = mapview.TopMapView(game_map, 200, 200)
     top_view.show_position(nav_view.x, nav_view.y, nav_view.direction)
     nav_view.connect('position-changed', show_position, top_view)
     hbox = gtk.HBox()
