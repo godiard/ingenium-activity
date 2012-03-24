@@ -4,16 +4,19 @@ import logging
 
 from gettext import gettext as _
 from sugar.graphics.icon import Icon
+from sugar.graphics.objectchooser import ObjectChooser
+
 
 class PrepareQuestionsWin(gtk.HBox):
 
-    def __init__(self, model):
+    def __init__(self, activity):
         gtk.HBox.__init__(self)
-        self.model = model
+        self._activity = activity
+        self.model = activity.model
         # Listview
         """
         +---------+------------------------------+
-        |Listview | Text - Graph -               |
+        |Listview | Question type:Text - Graph - |
         |         +------------------------------+
         |         | Edit Question Panel          |
         |         | (Notebook with 2 pages,      |
@@ -43,37 +46,91 @@ class PrepareQuestionsWin(gtk.HBox):
         vbox = gtk.VBox()
         self.pack_start(vbox, True)
 
+        # edit question panel
+
+        vbox.pack_start(gtk.Label(_('Question')), False, padding=5)
+        self.question_entry = gtk.Entry()
+        self.question_entry.connect('changed', self.__information_changed_cb)
+        hbox_row = gtk.HBox()
+        hbox_row.pack_start(self.question_entry, True, padding=5)
+        vbox.pack_start(hbox_row, False, padding=5)
+
+        notebook = gtk.Notebook()
+        vbox.pack_start(notebook, True)
+        self.vbox_edit = gtk.VBox()
+        notebook.set_show_tabs(True)
+        notebook.append_page(self.vbox_edit, gtk.Label(_('Text reply')))
+
+        vbox_graph_replies = gtk.VBox()
+        notebook.append_page(vbox_graph_replies, gtk.Label(_('Graph reply')))
+
+        # text reply controls
         hbox_buttons = gtk.HBox()
         add_reply_button = gtk.Button(_('Add reply'))
         add_reply_button.connect('clicked', self.__add_reply_cb)
         hbox_buttons.pack_start(add_reply_button, False, padding=5)
 
-        vbox.pack_start(hbox_buttons, False, padding=5)
-
-        # edit question panel
-        notebook = gtk.Notebook()
-        vbox.pack_start(notebook, False)
-        self.vbox_edit = gtk.VBox()
-        notebook.set_show_tabs(False)
-        notebook.append_page(self.vbox_edit)
-
-        self.vbox_edit.pack_start(gtk.Label(_('Question')), padding=5)
-        self.question_entry = gtk.Entry()
-        self.question_entry.connect('changed', self.__information_changed_cb)
-        hbox_row = gtk.HBox()
-        hbox_row.pack_start(self.question_entry, True, padding=5)
-        self.vbox_edit.pack_start(hbox_row, padding=5)
+        self.vbox_edit.pack_start(hbox_buttons, False, padding=5)
 
         self.vbox_edit.replies = []  # used to remove the childs
-        self.vbox_edit.pack_start(gtk.Label(_('Replies')), padding=5)
+        self.vbox_edit.pack_start(gtk.Label(_('Replies')), False, padding=5)
         self.replies_entries = []
         #self._add_reply_entry()
         #self._add_reply_entry(reply_ok=False)
 
+        # graph reply
+        self.load_image_button = gtk.Button(_('Load Image'))
+        self.load_image_button.connect('clicked', self.__load_image_cb)
+        vbox_graph_replies.pack_start(self.load_image_button, False, padding=5)
+
+        scrollwin = gtk.ScrolledWindow()
+        scrollwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.image = gtk.Image()
+        scrollwin.add_with_viewport(self.image)
+        vbox_graph_replies.pack_start(scrollwin, True, padding=5)
+
+        help_text = _('After select a image, paint the area where ' +
+                'is replied')
+        vbox_graph_replies.pack_start(gtk.Label(help_text), False, padding=5)
         self._load_treemodel()
         self.show_all()
         self._modified_data = False
         self._selected_key = None
+
+    def __load_image_cb(self, button):
+        try:
+            chooser = ObjectChooser(_('Choose image'),
+                self._activity, gtk.DIALOG_MODAL |
+                gtk.DIALOG_DESTROY_WITH_PARENT, what_filter='Image')
+        except:
+            chooser = ObjectChooser(_('Choose image'),
+                self._activity, gtk.DIALOG_MODAL |
+                gtk.DIALOG_DESTROY_WITH_PARENT)
+        try:
+            result = chooser.run()
+            if result == gtk.RESPONSE_ACCEPT:
+                logging.debug('ObjectChooser: %r',
+                        chooser.get_selected_object())
+                jobject = chooser.get_selected_object()
+                if jobject and jobject.file_path:
+                    self.__load_image(jobject.file_path)
+        finally:
+            chooser.destroy()
+            del chooser
+
+    def __load_image(self, file_path):
+        self.image.set_from_file(file_path)
+        # width = self.image.props.pixbuf.get_width()
+        # height = self.image.props.pixbuf.get_height()
+        # self.size_label_value.set_text('%s x %s px' % (width, height))
+        # copy to resources directory
+        self.model.check_resources_directory()
+        resource_path = os.path.join(activity.get_activity_root(),
+                'instance', 'resources')
+        shutil.copy(file_path, resource_path)
+        self._image_resource_path = os.path.join(resource_path,
+                os.path.basename(file_path))
+        self._modified_data = True
 
     def __information_changed_cb(self, entry):
         logging.debug('Data modified')
@@ -95,7 +152,7 @@ class PrepareQuestionsWin(gtk.HBox):
             reply_entry.set_text(text)
         reply_entry.connect('changed', self.__information_changed_cb)
         hbox_row.pack_start(reply_entry, True, padding=5)
-        self.vbox_edit.pack_start(hbox_row, True, padding=5)
+        self.vbox_edit.pack_start(hbox_row, False, padding=5)
         if reply_ok:
             icon = Icon(icon_name='dialog-ok')
         else:
@@ -104,7 +161,7 @@ class PrepareQuestionsWin(gtk.HBox):
         hbox_row.pack_start(icon, False, padding=5)
         hbox_row.show_all()
         self.replies_entries.append(reply_entry)
-        self.vbox_edit.replies.append(hbox_row)
+        self.vbox_edit.replies.append(hbox_row, False)
 
     def select_question(self, treeview):
         treestore, coldex = treeview.get_selection().get_selected()

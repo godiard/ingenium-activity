@@ -214,7 +214,7 @@ class IngeniumMachinaActivity(activity.Activity):
 
     def __questions_button_cb(self, button):
         if self.prepare_questions_win is None:
-            self.prepare_questions_win = PrepareQuestionsWin(self.model)
+            self.prepare_questions_win = PrepareQuestionsWin(self)
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.prepare_questions_win)
         self.main_notebook.set_current_page(button.page)
