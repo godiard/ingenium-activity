@@ -1,10 +1,94 @@
 import gtk
 import gobject
 import logging
+import os
+import shutil
+import cairo
 
 from gettext import gettext as _
+
+from sugar.activity import activity
 from sugar.graphics.icon import Icon
 from sugar.graphics.objectchooser import ObjectChooser
+
+
+class DrawReplyArea(gtk.DrawingArea):
+
+    def __init__(self, image_file_name):
+        gtk.DrawingArea.__init__(self)
+        self._image_file_name = image_file_name
+        self.pixbuf = gtk.gdk.pixbuf_new_from_file(image_file_name)
+        self._width = self.pixbuf.get_width()
+        self._height = self.pixbuf.get_height()
+
+        # Signals used to handle backing pixmap
+        self.connect("expose_event", self.__expose_draw_reply_cb)
+        # Event signals
+        self.connect("motion_notify_event", self.__motion_draw_reply_cp)
+        self.connect("button_press_event", self.__button_press_draw_reply_cp)
+
+        self.set_events(gtk.gdk.EXPOSURE_MASK | gtk.gdk.LEAVE_NOTIFY_MASK
+                | gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.POINTER_MOTION_MASK
+                | gtk.gdk.POINTER_MOTION_HINT_MASK)
+        self.reply_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                self._width, self._height)
+        self.background = None
+        self.show()
+
+    def setup(self):
+        """Configure the Area object."""
+        logging.debug('Area.setup: w=%s h=%s' % (self._width, self._height))
+        win = self.window
+        self.background = gtk.gdk.Pixmap(win, self._width, self._height, -1)
+        self.gc = win.new_gc()
+        self.pixbuf.render_to_drawable(self.background, self.gc, 0, 0, 0, 0,
+                self._width, self._height, gtk.gdk.RGB_DITHER_NONE, 0, 0)
+        self.set_size_request(self._width, self._height)
+
+        return True
+
+    # Redraw the screen from the backing pixmap
+    def __expose_draw_reply_cb(self, widget, event):
+        if self.background is None:
+            self.setup()
+        x, y, width, height = event.area
+        widget.window.draw_drawable(widget.get_style().fg_gc[gtk.STATE_NORMAL],
+                                self.background, x, y, x, y, width, height)
+        cr = widget.window.cairo_create()
+        cr.rectangle(x, y, width, height)
+        cr.clip()
+        cr.set_source_surface(self.reply_surface)
+        cr.paint()
+
+        return False
+
+    # Draw a rectangle on the screen
+    def draw_brush(self, widget, x, y):
+        brush_size = 20
+        cr = cairo.Context(self.reply_surface)
+        cr.set_source_rgb(1, 0, 0)
+        cr.rectangle(x - brush_size / 2, y - brush_size / 2, brush_size,
+                brush_size)
+        #cr.arc(x, y, brush_size, 0, 3.15)
+        cr.fill()
+        widget.queue_draw_area(x - brush_size / 2, y - brush_size / 2,
+                brush_size, brush_size)
+
+    def __button_press_draw_reply_cp(self, widget, event):
+        if event.button == 1:
+            self.draw_brush(widget, event.x, event.y)
+        return True
+
+    def __motion_draw_reply_cp(self, widget, event):
+        if event.is_hint:
+            x, y, state = event.window.get_pointer()
+        else:
+            x = event.x
+            y = event.y
+            state = event.state
+        if state & gtk.gdk.BUTTON1_MASK:
+            self.draw_brush(widget, x, y)
+        return True
 
 
 class PrepareQuestionsWin(gtk.HBox):
@@ -83,11 +167,10 @@ class PrepareQuestionsWin(gtk.HBox):
         self.load_image_button.connect('clicked', self.__load_image_cb)
         vbox_graph_replies.pack_start(self.load_image_button, False, padding=5)
 
-        scrollwin = gtk.ScrolledWindow()
-        scrollwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.image = gtk.Image()
-        scrollwin.add_with_viewport(self.image)
-        vbox_graph_replies.pack_start(scrollwin, True, padding=5)
+        self.scrollwin = gtk.ScrolledWindow()
+        self.scrollwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.draw_reply_area = None
+        vbox_graph_replies.pack_start(self.scrollwin, True, padding=5)
 
         help_text = _('After select a image, paint the area where ' +
                 'is replied')
@@ -119,10 +202,8 @@ class PrepareQuestionsWin(gtk.HBox):
             del chooser
 
     def __load_image(self, file_path):
-        self.image.set_from_file(file_path)
-        # width = self.image.props.pixbuf.get_width()
-        # height = self.image.props.pixbuf.get_height()
-        # self.size_label_value.set_text('%s x %s px' % (width, height))
+        self.draw_reply_area = DrawReplyArea(file_path)
+        self.scrollwin.add_with_viewport(self.draw_reply_area)
         # copy to resources directory
         self.model.check_resources_directory()
         resource_path = os.path.join(activity.get_activity_root(),
