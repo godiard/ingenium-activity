@@ -54,13 +54,15 @@ class EditMapWin(gtk.HBox):
         rigth_vbox.pack_start(notebook, True, True)
 
         # resources
-        # store: title, pxb, image_file_name, id_resource
-        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str, str)
+        # store: title, pxb, image_file_name, id_resource/id_question, type
+        # type: question or resource
+        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str, str,
+                str)
         self._resources_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
         self.resources_iconview = gtk.IconView(self._resources_store)
         self.resources_iconview.set_text_column(0)
         self.resources_iconview.set_pixbuf_column(1)
-        self.load_resources()
+        self.load_resources_and_questions()
         self.resources_iconview.connect('item-activated',
                 self.__resource_iconview_activated_cb)
 
@@ -77,7 +79,7 @@ class EditMapWin(gtk.HBox):
         scrolled1 = gtk.ScrolledWindow()
         scrolled1.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         scrolled1.add_with_viewport(self.resources_iconview)
-        notebook.append_page(scrolled1, gtk.Label(_('Resources')))
+        notebook.append_page(scrolled1, gtk.Label(_('Resources & ?')))
         scrolled2 = gtk.ScrolledWindow()
         scrolled2.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         scrolled2.add_with_viewport(self.furniture_iconview)
@@ -108,7 +110,7 @@ class EditMapWin(gtk.HBox):
         room_name = self.game_map.get_room_name(room_key)
         self.room_name_entry.set_text(room_name)
 
-    def load_resources(self, origin=None):
+    def load_resources_and_questions(self, origin=None):
         logging.error('Loading resources')
         self._resources_store.clear()
         for resource in self.model.data['resources']:
@@ -124,7 +126,22 @@ class EditMapWin(gtk.HBox):
             pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, 100,
                     100)
             self._resources_store.append([title, pxb, image_file_name,
-                    id_resource])
+                    id_resource, 'resource'])
+        logging.error('Loading questions')
+        for question in self.model.data['questions']:
+            text = question['question']
+            if question['type'] == self.model.QUESTION_TYPE_GRAPHIC:
+                image_file_name = question['file_image']
+            else:
+                image_file_name = './icons/question.svg'
+
+            id_question = question['id_question']
+            logging.error('Adding %s %s %s', text, image_file_name,
+                    id_question)
+            pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, 100,
+                    100)
+            self._resources_store.append([text, pxb, image_file_name,
+                    id_question, 'question'])
 
     def load_furniture(self):
         images_path = os.path.join(activity.get_bundle_path(),
@@ -146,18 +163,21 @@ class EditMapWin(gtk.HBox):
     def __resource_iconview_activated_cb(self, widget, item):
         model = widget.get_model()
         image_file_name = model[item][2]
-        id_resource = model[item][3]
-        self._add_image(image_file_name, id_resource)
+        id_object = model[item][3]
+        type_object = model[item][4]
+        self._add_image(image_file_name, id_object, type_object)
 
-    def _add_image(self, image_file_name, id_resource=None):
+    def _add_image(self, image_file_name, id_object=None, type_object=None):
         logging.error('Image %s selected', image_file_name)
         x = self.nav_view.x
         y = self.nav_view.y
         direction = self.nav_view.direction
         wall_object = {'image_file_name': image_file_name,
                 'wall_x': 50.0, 'wall_y': 50.0, 'wall_scale': 0.2}
-        if id_resource is not None:
-            wall_object['id_resource'] = id_resource
+        if id_object is not None:
+            wall_object['id_object'] = id_object
+        if type_object is not None:
+            wall_object['type_object'] = type_object
         self.game_map.add_object_to_wall(x, y, direction, wall_object)
         self.nav_view.update_wall_info(x, y, direction)
         self.nav_view.grab_focus()
@@ -170,8 +190,9 @@ class EditMapWin(gtk.HBox):
         if self.resources_iconview.is_focus():
             item = self.resources_iconview.get_selected_items()[0][0]
             image_file_name = self._resources_store[item][2]
-            id_resource = self._resources_store[item][3]
-            self._add_image(image_file_name, id_resource)
+            id_object = self._resources_store[item][3]
+            type_object = self._resources_store[item][4]
+            self._add_image(image_file_name, id_object, type_object)
 
     def remove_selected_object(self):
         self.nav_view.remove_selected_object()

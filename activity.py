@@ -230,7 +230,7 @@ class IngeniumMachinaActivity(activity.Activity):
                     not self.resources_maps_connected:
                 logging.error('Connecting signal resource_updated')
                 self.collect_resources_win.connect('resource_updated',
-                        self.edit_map_win.load_resources)
+                        self.edit_map_win.load_resources_and_questions)
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_RESOURCES_ACTION
 
@@ -244,7 +244,7 @@ class IngeniumMachinaActivity(activity.Activity):
                     not self.resources_maps_connected:
                 logging.error('Connecting signal resource_updated')
                 self.collect_resources_win.connect('resource_updated',
-                        self.edit_map_win.load_resources)
+                        self.edit_map_win.load_resources_and_questions)
 
             # Try connect with the playing map
             if self.edit_descriptions_win is not None and not \
