@@ -8,6 +8,9 @@ import zipfile
 
 class GameModel:
 
+    QUESTION_TYPE_TEXT = 'TEXT'
+    QUESTION_TYPE_GRAPHIC = 'GRAPHIC'
+
     def __init__(self):
         self.data = {}
         self.data['questions'] = []
@@ -27,6 +30,7 @@ class GameModel:
                     'file_text' = ''}
         """
         self.data['last_resource_id'] = 0
+        self.data['last_question_id'] = 0
 
         self.data['map_data'] = None
 
@@ -34,11 +38,22 @@ class GameModel:
         self.data['last_resource_id'] = self.data['last_resource_id'] + 1
         return self.data['last_resource_id']
 
+    def get_new_question_id(self):
+        self.data['last_question_id'] = self.data['last_question_id'] + 1
+        return self.data['last_question_id']
+
     def get_resource(self, id_resource):
         for resource in self.data['resources']:
             if resource['id_resource'] == int(id_resource):
                 return resource
         logging.error('ERROR: resource %s not found', id_resource)
+        return None
+
+    def get_question(self, id_question):
+        for question in self.data['questions']:
+            if question['id_question'] == int(id_question):
+                return question
+        logging.error('ERROR: question %s not found', id_question)
         return None
 
     def write(self, file_name):
@@ -63,6 +78,14 @@ class GameModel:
                     os.path.basename(resource['file_image'])))
             z.write(resource['file_text'], os.path.join('resources',
                     os.path.basename(resource['file_text'])))
+
+        for question in self.data['questions']:
+            if question['type'] == self.QUESTION_TYPE_GRAPHIC:
+                z.write(question['file_image'], os.path.join('resources',
+                        os.path.basename(question['file_image'])))
+                z.write(question['file_image_reply'],
+                        os.path.join('resources',
+                        os.path.basename(question['file_image_reply'])))
 
         z.close()
 

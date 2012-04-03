@@ -90,6 +90,12 @@ class DrawReplyArea(gtk.DrawingArea):
             self.draw_brush(widget, x, y)
         return True
 
+    def write_reply_png(self, file_path):
+        self.reply_surface.write_to_png(file_path)
+
+    def read_reply_png(self, file_path):
+        self.reply_surface = self.reply_surface.create_from_png(file_path)
+
 
 class PrepareQuestionsWin(gtk.HBox):
 
@@ -114,7 +120,8 @@ class PrepareQuestionsWin(gtk.HBox):
         self.quest_listview.set_size_request(width, -1)
 
         self.quest_listview.connect('cursor-changed', self.select_question)
-        self.treemodel = gtk.ListStore(gobject.TYPE_STRING)
+        self.treemodel = gtk.ListStore(gobject.TYPE_STRING,
+                gobject.TYPE_STRING)
         self.quest_listview.set_model(self.treemodel)
         renderer = gtk.CellRendererText()
         renderer.set_property('wrap-mode', gtk.WRAP_WORD)
@@ -139,14 +146,19 @@ class PrepareQuestionsWin(gtk.HBox):
         hbox_row.pack_start(self.question_entry, True, padding=5)
         vbox.pack_start(hbox_row, False, padding=5)
 
-        notebook = gtk.Notebook()
-        vbox.pack_start(notebook, True)
+        self.notebook = gtk.Notebook()
+        vbox.pack_start(self.notebook, True)
         self.vbox_edit = gtk.VBox()
-        notebook.set_show_tabs(True)
-        notebook.append_page(self.vbox_edit, gtk.Label(_('Text reply')))
+        self.notebook.set_show_tabs(True)
+        self.questions_types = []
+
+        self.notebook.append_page(self.vbox_edit, gtk.Label(_('Text reply')))
+        self.questions_types.append(self.model.QUESTION_TYPE_TEXT)
 
         vbox_graph_replies = gtk.VBox()
-        notebook.append_page(vbox_graph_replies, gtk.Label(_('Graph reply')))
+        self.notebook.append_page(vbox_graph_replies,
+                gtk.Label(_('Graph reply')))
+        self.questions_types.append(self.model.QUESTION_TYPE_GRAPHIC)
 
         # text reply controls
         hbox_buttons = gtk.HBox()
@@ -178,7 +190,7 @@ class PrepareQuestionsWin(gtk.HBox):
         self._load_treemodel()
         self.show_all()
         self._modified_data = False
-        self._selected_key = None
+        self._selected_key = self.model.get_new_question_id()
 
     def __load_image_cb(self, button):
         try:
@@ -202,13 +214,17 @@ class PrepareQuestionsWin(gtk.HBox):
             del chooser
 
     def __load_image(self, file_path):
+        if self.draw_reply_area is not None:
+            self.scrollwin.remove(self.scrollwin.get_children()[0])
+            self.draw_reply_area = None
         self.draw_reply_area = DrawReplyArea(file_path)
         self.scrollwin.add_with_viewport(self.draw_reply_area)
         # copy to resources directory
         self.model.check_resources_directory()
         resource_path = os.path.join(activity.get_activity_root(),
                 'instance', 'resources')
-        shutil.copy(file_path, resource_path)
+        if not file_path.startswith(resource_path):
+            shutil.copy(file_path, resource_path)
         self._image_resource_path = os.path.join(resource_path,
                 os.path.basename(file_path))
         self._modified_data = True
@@ -221,7 +237,8 @@ class PrepareQuestionsWin(gtk.HBox):
         logging.error('loading treemodel')
         for question in self.model.data['questions']:
             logging.error('adding question %s', question)
-            self.treemodel.append([question['question']])
+            self.treemodel.append([question['question'],
+                    question['id_question']])
 
     def __add_reply_cb(self, button):
         self._add_reply_entry(reply_ok=len(self.replies_entries) == 0)
@@ -242,40 +259,58 @@ class PrepareQuestionsWin(gtk.HBox):
         hbox_row.pack_start(icon, False, padding=5)
         hbox_row.show_all()
         self.replies_entries.append(reply_entry)
-        self.vbox_edit.replies.append(hbox_row, False)
+        self.vbox_edit.replies.append(hbox_row)
 
     def select_question(self, treeview):
         treestore, coldex = treeview.get_selection().get_selected()
-        logging.debug('selected question %s', treestore.get_value(coldex, 0))
+        logging.debug('selected question %s', treestore.get_value(coldex, 1))
         if self._modified_data:
             # update data
             self._update_model(self._selected_key)
-        self._selected_key = treestore.get_value(coldex, 0)
+        self._selected_key = treestore.get_value(coldex, 1)
         self._display_model(self._selected_key)
 
     def _update_model(self, key):
-        question = self._get_question(key)
+        question = self.model.get_question(key)
         new_entry = False
         if question == None:
             question = {}
             new_entry = True
         replies = []
-        for reply_entry in self.replies_entries:
-            if reply_entry.get_text() != '':
-                reply = {}
-                reply['text'] = reply_entry.get_text()
-                reply['valid'] = len(replies) == 0  # The first is the valid
-                replies.append(reply)
+
+        question_type = self.questions_types[self.notebook.get_current_page()]
+
         question = {'question': self.question_entry.get_text(),
-                    'type': 'TEXT',
-                    'replies': replies}
+                    'type': question_type,
+                    'id_question': key}
+
+        if question_type == self.model.QUESTION_TYPE_TEXT:
+            for reply_entry in self.replies_entries:
+                if reply_entry.get_text() != '':
+                    reply = {}
+                    reply['text'] = reply_entry.get_text()
+                    # The first is the valid
+                    reply['valid'] = len(replies) == 0
+                    replies.append(reply)
+            question['replies'] = replies
+
+        if question_type == self.model.QUESTION_TYPE_GRAPHIC:
+            question['file_image'] = self._image_resource_path
+            # save painted image
+            resource_path = os.path.join(activity.get_activity_root(),
+                    'instance', 'resources')
+            reply_file_name = os.path.join(resource_path,
+                    'reply_image_%s.png' % key)
+            self.draw_reply_area.write_reply_png(reply_file_name)
+            question['file_image_reply'] = reply_file_name
+
         if new_entry:
             self.model.data['questions'].append(question)
-            self.treemodel.append([self.question_entry.get_text()])
+            self.treemodel.append([self.question_entry.get_text(), key])
         self._modified_data = False
 
     def _display_model(self, key):
-        question = self._get_question(key)
+        question = self.model.get_question(key)
         self._display_question(question)
 
     def _display_question(self, question, display_empty_entries=False):
@@ -284,24 +319,27 @@ class PrepareQuestionsWin(gtk.HBox):
         for hbox in self.vbox_edit.replies:
             self.vbox_edit.remove(hbox)
         self.vbox_edit.replies = []
-        # add news
-        for reply in question['replies']:
-            if display_empty_entries or reply['text'] != '':
-                self._add_reply_entry(reply_ok=reply['valid'],
-                        text=reply['text'])
-        self._modified_data = False
+        question_type = question['type']
+        if question_type == self.model.QUESTION_TYPE_TEXT:
+            self.notebook.set_current_page(0)
+            # add replies
+            for reply in question['replies']:
+                if display_empty_entries or reply['text'] != '':
+                    self._add_reply_entry(reply_ok=reply['valid'],
+                            text=reply['text'])
 
-    def _get_question(self, key):
-        for question in self.model.data['questions']:
-            if question['question'] == key:
-                return question
-        return None
+        if question_type == self.model.QUESTION_TYPE_GRAPHIC:
+            self.notebook.set_current_page(1)
+            # show graph
+            self.__load_image(question['file_image'])
+            self.draw_reply_area.read_reply_png(question['file_image_reply'])
+        self._modified_data = False
 
     def del_question(self):
         logging.debug('del question')
         if self._selected_key is not None:
             logging.debug('select key %s', self._selected_key)
-            self.model.data['questions'].remove(self._get_question(
+            self.model.data['questions'].remove(self.model.get_question(
                                                         self._selected_key))
             self.treemodel.remove(
                         self.quest_listview.get_selection())
@@ -313,10 +351,11 @@ class PrepareQuestionsWin(gtk.HBox):
             # update data
             self._update_model(self._selected_key)
 
-        self._selected_key = None
+        self._selected_key = self.model.get_new_question_id()
 
         question = {'question': '',
-                    'type': 'TEXT',
+                    'type': self.model.QUESTION_TYPE_TEXT,
                     'replies': [{'text':'', 'valid':True},
                                 {'text':'', 'valid':False}]}
+
         self._display_question(question, display_empty_entries=True)
