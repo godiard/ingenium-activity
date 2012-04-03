@@ -14,6 +14,7 @@ import rsvg
 from sugar.graphics.style import Color
 
 from game_map import GameMap
+from character import Character
 import mapview
 
 WIDTH_CONTROL_LINES = 2
@@ -63,6 +64,25 @@ class MapNavView(gtk.DrawingArea):
         self.connect('button_press_event', self.__button_press_event_cb)
         self.connect('motion_notify_event', self.__motion_notify_event_cb)
         self.connect('button_release_event', self.__button_release_event_cb)
+
+        self._character = Character(self)
+        def size_allocate_cb(widget, allocation):
+            self.calculate_sizes(allocation.width, allocation.height)
+            if self.view_mode == self.MODE_PLAY:
+                character_y = allocation.height - self._grid_size
+                self._character.pos = [0, character_y]
+            self.disconnect(self._setup_handle)
+
+        self._setup_handle = self.connect('size_allocate',
+                                          size_allocate_cb)
+
+        if self.view_mode == self.MODE_PLAY:
+            gobject.timeout_add(100, self._update_timer)
+
+    def _update_timer(self):
+        rect = self._character.update()
+        self.queue_draw_area(*rect)
+        return True
 
     def __key_press_event_cb(self, widget, event):
         keyname = gtk.gdk.keyval_name(event.keyval)
@@ -209,7 +229,6 @@ class MapNavView(gtk.DrawingArea):
 
     def expose(self, widget, event):
         rect = self.get_allocation()
-        self.calculate_sizes(rect.width, rect.height)
         ctx = widget.window.cairo_create()
         # set a clip region for the expose event
         ctx.rectangle(event.area.x, event.area.y, event.area.width,
@@ -222,7 +241,7 @@ class MapNavView(gtk.DrawingArea):
             view_data = {'width': 150, 'height': 150,
                     'show_position': position, 'x': rect.width - 150, 'y': 30}
             mapview.draw(ctx, self._game_map, view_data)
-
+            self._character.draw(ctx)
         return False
 
     def receive_update_wall_info(self, mapnav, x, y, direction):
