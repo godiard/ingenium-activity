@@ -282,7 +282,6 @@ class IngeniumMachinaActivity(activity.Activity):
                 self.edit_map_win.nav_view.connect('map-updated',
                     self.mapnav_game.receive_update_wall_info)
                 self.views_connected = True
-
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.edit_descriptions_win)
             # connect signal to know if the resources are updated

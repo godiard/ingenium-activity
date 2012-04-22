@@ -48,13 +48,13 @@ class MapNavView(gtk.DrawingArea):
     MODE_PLAY = 0
     MODE_EDIT = 1
 
-    def __init__(self, game_map):
+    def __init__(self, game_map, mode=MODE_PLAY):
         self._game_map = game_map
         self.x = 0
         self.y = 0
         self.direction = 'S'
         self.cache_info = {}
-        self.view_mode = self.MODE_PLAY
+        self.view_mode = mode
         self.selected = None
         super(MapNavView, self).__init__()
         self.set_can_focus(True)
@@ -82,8 +82,9 @@ class MapNavView(gtk.DrawingArea):
             gobject.timeout_add(100, self._update_timer)
 
     def _update_timer(self):
-        rect = self._character.update()
-        self.queue_draw_area(*rect)
+        if self.is_drawable():
+            rect = self._character.update()
+            self.queue_draw_area(*rect)
         return True
 
     def __key_press_event_cb(self, widget, event):
@@ -239,7 +240,10 @@ class MapNavView(gtk.DrawingArea):
         ctx.rectangle(event.area.x, event.area.y, event.area.width,
                 event.area.height)
         ctx.clip()
-        self.draw(ctx)
+        logging.error('expose clipping area %d %d %d %d', event.area.x,
+                event.area.y, event.area.width, event.area.height)
+        self.draw(ctx, event.area.x, event.area.y, event.area.width,
+                event.area.height)
 
         if self.view_mode == self.MODE_PLAY:
             position = {'x': self.x, 'y': self.y, 'direction': self.direction}
@@ -304,7 +308,7 @@ class MapNavView(gtk.DrawingArea):
             self.cache_info[key] = info
             return info
 
-    def draw(self, ctx):
+    def draw(self, ctx, clip_x, clip_y, clip_width, clip_height):
         def darken(color, factor=0.8):
             return tuple(c * factor for c in color)
 
@@ -372,9 +376,7 @@ class MapNavView(gtk.DrawingArea):
                 image_file_name = wall_object['image_file_name']
                 wall_x, wall_y = wall_object['wall_x'], wall_object['wall_y']
                 wall_x, wall_y = self.wall_to_view(wall_x, wall_y)
-                logging.error('Drawing object at %d %d', wall_x, wall_y)
                 wall_scale = wall_object['wall_scale']
-                image_file_name = wall_object['image_file_name']
                 ctx.save()
                 if image_file_name.endswith('.svg'):
                     svg = wall_object['svg_image_cache']
@@ -382,6 +384,16 @@ class MapNavView(gtk.DrawingArea):
                             float(svg.props.height)
                     width = int(svg.props.width * scale)
                     height = int(svg.props.height * scale)
+
+                    # verify if is out of the clip area
+                    if wall_x + width < clip_x or \
+                        wall_x > clip_x + clip_width or \
+                        wall_y + height < clip_y or \
+                        wall_y > clip_y + clip_height:
+                        break
+                    logging.error('Drawing object %s at %d %d w %d h %d',
+                            image_file_name, wall_x, wall_y, width, height)
+
                     ctx.translate(wall_x, wall_y)
                     ctx.scale(scale, scale)
                     svg.render_cairo(ctx)
@@ -391,6 +403,16 @@ class MapNavView(gtk.DrawingArea):
                             float(pxb.get_height())
                     width = int(pxb.get_width() * scale)
                     height = int(pxb.get_height() * scale)
+
+                    # verify if is out of the clip area
+                    if wall_x + width < clip_x or \
+                        wall_x > clip_x + clip_width or \
+                        wall_y + height < clip_y or \
+                        wall_y > clip_y + clip_height:
+                        break
+                    logging.error('Drawing object %s at %d %d w %d h %d',
+                            image_file_name, wall_x, wall_y, width, height)
+
                     ctx.translate(wall_x, wall_y)
                     ctx.scale(scale, scale)
                     ctx.set_source_pixbuf(pxb, 0, 0)
