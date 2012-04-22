@@ -15,14 +15,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import sys
 import gtk
-import gobject
 import logging
 
 from gettext import gettext as _
 
-from sugar import profile
 from sugar.activity import activity
 from sugar.graphics.toolbarbox import ToolbarBox
 from sugar.activity.widgets import ActivityToolbarButton
@@ -30,7 +27,6 @@ from sugar.activity.widgets import StopButton
 from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.radiotoolbutton import RadioToolButton
 from sugar.graphics.toggletoolbutton import ToggleToolButton
-from sugar.graphics.icon import Icon
 
 from model import GameModel
 from resources import CollectResourcesWin
@@ -39,12 +35,6 @@ from editmap import EditMapWin
 from mapnav import MapNavView
 from game_map import GameMap
 from dialogs import ResourceDialog
-
-from sugar.graphics.xocolor import XoColor
-sys.path.append('..')  # import sugargame package from top directory.
-import sugargame.canvas
-
-import game
 
 PLAY_MODE = 0
 EDIT_MODE = 1
@@ -136,27 +126,29 @@ class IngeniumMachinaActivity(activity.Activity):
         self.update_buttons_state()
         self.main_notebook = gtk.Notebook()
 
-        # build the Pygame canvas
-        self._pygamecanvas = sugargame.canvas.PygameCanvas(self)
-
-        self.main_notebook.append_page(self._pygamecanvas)
-
-        # assign keyboard focus to the PygameCanvas widget, so that
-        # keyboard events generate pygame events
-        self._pygamecanvas.grab_focus()
-
-        # create the game instance
-        xo_color = XoColor(profile.get_color())
-        colors = xo_color.get_stroke_color(), xo_color.get_fill_color()
-        self.game = game.Game(colors)
-
-        # start the game running (self.game.run is called when the
-        # activity constructor returns).
-        self._pygamecanvas.run_pygame(self.game.run)
-
         self.main_notebook.set_show_tabs(False)
         self.main_notebook.show_all()
         self.set_canvas(self.main_notebook)
+
+    def create_play_view(self):
+        if not 'map_data' in self.model.data or \
+            self.model.data['map_data'] is None:
+            self.game_map = GameMap()
+        else:
+            self.game_map = GameMap(self.model.data['map_data'])
+        self.mapnav_game = MapNavView(self.game_map)
+        self.mapnav_game.view_mode = MapNavView.MODE_PLAY
+        self.mapnav_game.show()
+        self.mapnav_game.connect('resource-clicked',
+                self.__resource_clicked_cb)
+
+        # Try connect withthe edition map
+        if self.edit_map_win is not None and not self.views_connected:
+            logging.error('Connecting signal map-updated')
+            self.edit_map_win.nav_view.connect('map-updated',
+                self.mapnav_game.receive_update_wall_info)
+            self.views_connected = True
+        return self.mapnav_game
 
     def __change_mode_cb(self, button):
         if button.get_active():
@@ -259,29 +251,8 @@ class IngeniumMachinaActivity(activity.Activity):
 
     def __descriptions_button_cb(self, button):
         if self.edit_descriptions_win is None:
-
-            # TODO: Temporary use this page to show a mapview in play mode
-            # later will be moved to the page 0 and we will add the
-            # descriptions qpage here
-            if not 'map_data' in self.model.data or \
-                self.model.data['map_data'] is None:
-                self.game_map = GameMap()
-            else:
-                self.game_map = GameMap(self.model.data['map_data'])
             self.edit_descriptions_win = gtk.HBox()
-            self.mapnav_game = MapNavView(self.game_map)
-            self.mapnav_game.view_mode = MapNavView.MODE_PLAY
-            self.edit_descriptions_win.add(self.mapnav_game)
-            self.edit_descriptions_win.show_all()
-            self.mapnav_game.connect('resource-clicked',
-                    self.__resource_clicked_cb)
 
-            # Try connect withthe edition map
-            if self.edit_map_win is not None and not self.views_connected:
-                logging.error('Connecting signal map-updated')
-                self.edit_map_win.nav_view.connect('map-updated',
-                    self.mapnav_game.receive_update_wall_info)
-                self.views_connected = True
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.edit_descriptions_win)
             # connect signal to know if the resources are updated
@@ -299,6 +270,7 @@ class IngeniumMachinaActivity(activity.Activity):
         '''Read file from Sugar Journal.'''
         logging.error('READING FILE %s', file_path)
         self.model.read(file_path)
+        self.main_notebook.append_page(self.create_play_view())
 
     def write_file(self, file_path):
         '''Save file on Sugar Journal. '''
