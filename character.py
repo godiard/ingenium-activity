@@ -90,6 +90,13 @@ class Character(object):
         # draw char
         dx, dy = self.pos[0], \
             self.pos[1] - self.sprite.cel_height + 10
+
+        # for debug write a rectangle around
+        context.rectangle(dx, dy, self.sprite.cel_width, self.sprite.cel_height)
+        stroke = (0, 0, 0)
+        context.set_source_rgb(*stroke)
+        context.stroke()
+
         self.sprite.draw(context, dx, dy)
 
 
