@@ -34,7 +34,7 @@ from questions import PrepareQuestionsWin
 from editmap import EditMapWin
 from mapnav import MapNavView
 from game_map import GameMap
-from dialogs import ResourceDialog
+from dialogs import ResourceDialog, QuestionDialog
 
 PLAY_MODE = 0
 EDIT_MODE = 1
@@ -141,6 +141,8 @@ class IngeniumMachinaActivity(activity.Activity):
         self.mapnav_game.show()
         self.mapnav_game.connect('resource-clicked',
                 self.__resource_clicked_cb)
+        self.mapnav_game.connect('question-clicked',
+                self.__question_clicked_cb)
 
         # Try connect withthe edition map
         if self.edit_map_win is not None and not self.views_connected:
@@ -265,6 +267,16 @@ class IngeniumMachinaActivity(activity.Activity):
         resource_dialog = ResourceDialog(self.model, id_resource)
         resource_dialog.set_transient_for(self.get_toplevel())
         resource_dialog.show_all()
+
+    def __question_clicked_cb(self, mapnav, id_question):
+        logging.error('** Question %s clicked', id_question)
+        question_dialog = QuestionDialog(self.model, id_question)
+        question_dialog.set_transient_for(self.get_toplevel())
+        question_dialog.connect('reply-selected', self.__question_replied_cb)
+        question_dialog.show_all()
+
+    def __question_replied_cb(self, dialog, id_question, valid):
+        logging.error('** Question %s replied %s', id_question, valid)
 
     def read_file(self, file_path):
         '''Read file from Sugar Journal.'''

@@ -68,6 +68,7 @@ class MapNavView(gtk.DrawingArea):
         self.connect('button_release_event', self.__button_release_event_cb)
 
         self._character = Character(self)
+
         def size_allocate_cb(widget, allocation):
             self.calculate_sizes(allocation.width, allocation.height)
             if self.view_mode == self.MODE_PLAY:

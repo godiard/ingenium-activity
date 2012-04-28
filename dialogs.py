@@ -15,6 +15,8 @@
 
 from gettext import gettext as _
 import os
+import random
+import logging
 
 import gobject
 import gtk
@@ -23,6 +25,8 @@ import webkit
 from sugar.graphics import style
 from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.icon import Icon
+
+from questions import DrawReplyArea
 
 
 class _DialogWindow(gtk.Window):
@@ -135,3 +139,59 @@ class ResourceDialog(_DialogWindow):
             if os.path.exists(resource['file_text']):
                 with open(resource['file_text'], 'r') as html_file:
                     editor.load_html_string(html_file.read(), 'file:///')
+
+
+class QuestionDialog(_DialogWindow):
+
+    __gtype_name__ = 'QuestionDialog'
+
+    __gsignals__ = {
+        'reply-selected': (gobject.SIGNAL_RUN_LAST, None,
+                ([gobject.TYPE_STRING, gobject.TYPE_BOOLEAN])),
+    }
+
+    def __init__(self, model, id_question):
+        self._id_question = id_question
+        question = model.get_question(id_question)
+        super(QuestionDialog, self).__init__(None, question['question'])
+
+        scrollwin = gtk.ScrolledWindow()
+        scrollwin.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        self.content_vbox.pack_start(scrollwin)
+        vbox = gtk.VBox()
+        scrollwin.add_with_viewport(vbox)
+
+        question_type = question['type']
+
+        if question_type == model.QUESTION_TYPE_TEXT:
+            replies = []
+            replies.extend(question['replies'])
+            random.shuffle(replies)
+            for reply in replies:
+                hbox_row = gtk.HBox()
+                reply_label = gtk.Label(reply['text'])
+                hbox_row.pack_start(reply_label, True, padding=5)
+                vbox.pack_start(hbox_row, False, padding=5)
+                reply_button = gtk.Button(_('Select'))
+                reply_button.connect('clicked', self.__button_reply_click_cb,
+                        reply['valid'])
+                hbox_row.pack_start(reply_button, False, padding=5)
+                hbox_row.show_all()
+
+        if question_type == model.QUESTION_TYPE_GRAPHIC:
+            image_path = question['file_image']
+            reply_image_path = question['file_image_reply']
+
+            self.draw_reply_area = DrawReplyArea(image_path,
+                    reply_file_name=reply_image_path)
+            vbox.pack_start(self.draw_reply_area, False, padding=5)
+            self.draw_reply_area.connect('reply-selected',
+                    self.__draw_reply_click_cb)
+
+    def __button_reply_click_cb(self, widget, valid_reply):
+        self.emit('reply-selected', self._id_question, valid_reply)
+        self.destroy()
+
+    def __draw_reply_click_cb(self, widget, valid_reply):
+        self.emit('reply-selected', self._id_question, valid_reply)
+        self.destroy()

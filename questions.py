@@ -14,24 +14,42 @@ from sugar.graphics.objectchooser import ObjectChooser
 
 class DrawReplyArea(gtk.DrawingArea):
 
-    def __init__(self, image_file_name):
+    __gsignals__ = {
+        'reply-selected': (gobject.SIGNAL_RUN_LAST, None,
+                ([gobject.TYPE_BOOLEAN])),
+    }
+
+    def __init__(self, image_file_name, reply_file_name=None, edit=False):
         gtk.DrawingArea.__init__(self)
         self._image_file_name = image_file_name
         self.pixbuf = gtk.gdk.pixbuf_new_from_file(image_file_name)
         self._width = self.pixbuf.get_width()
         self._height = self.pixbuf.get_height()
+        self._edit = edit
+
+        self.reply_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                self._width, self._height)
 
         # Signals used to handle backing pixmap
         self.connect("expose_event", self.__expose_draw_reply_cb)
         # Event signals
-        self.connect("motion_notify_event", self.__motion_draw_reply_cp)
-        self.connect("button_press_event", self.__button_press_draw_reply_cp)
+
+        if self._edit:
+            self.connect("motion_notify_event", self.__motion_draw_reply_cp)
+            self.connect("button_press_event",
+                    self.__button_press_draw_reply_cb)
+        else:
+            self.connect("button_press_event",
+                    self.__button_press_check_value_cb)
+            if reply_file_name is not None:
+                self.reply_surface = \
+                    cairo.ImageSurface.create_from_png(reply_file_name)
+            else:
+                logging.error('ERROR: using in play mode without reply image')
 
         self.set_events(gtk.gdk.EXPOSURE_MASK | gtk.gdk.LEAVE_NOTIFY_MASK
                 | gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.POINTER_MOTION_MASK
                 | gtk.gdk.POINTER_MOTION_HINT_MASK)
-        self.reply_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                self._width, self._height)
         self.background = None
         self.show()
 
@@ -54,11 +72,12 @@ class DrawReplyArea(gtk.DrawingArea):
         x, y, width, height = event.area
         widget.window.draw_drawable(widget.get_style().fg_gc[gtk.STATE_NORMAL],
                                 self.background, x, y, x, y, width, height)
-        cr = widget.window.cairo_create()
-        cr.rectangle(x, y, width, height)
-        cr.clip()
-        cr.set_source_surface(self.reply_surface)
-        cr.paint()
+        if self._edit:
+            cr = widget.window.cairo_create()
+            cr.rectangle(x, y, width, height)
+            cr.clip()
+            cr.set_source_surface(self.reply_surface)
+            cr.paint()
 
         return False
 
@@ -74,9 +93,28 @@ class DrawReplyArea(gtk.DrawingArea):
         widget.queue_draw_area(x - brush_size / 2, y - brush_size / 2,
                 brush_size, brush_size)
 
-    def __button_press_draw_reply_cp(self, widget, event):
+    def __button_press_draw_reply_cb(self, widget, event):
         if event.button == 1:
             self.draw_brush(widget, event.x, event.y)
+        return True
+
+    def __button_press_check_value_cb(self, widget, event):
+        if event.button == 1:
+            x, y = event.x, event.y
+            cairo_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1, 1)
+            cairo_context = cairo.Context(cairo_surface)
+            # translate xlib_surface so that target pixel is at 0, 0
+            cairo_context.set_source_surface(self.reply_surface, -x, -y)
+            cairo_context.rectangle(0, 0, 1, 1)
+            cairo_context.set_operator(cairo.OPERATOR_SOURCE)
+            cairo_context.fill()
+            cairo_surface.flush()  # ensure all writing is done
+            # Read the pixel
+            pixels = cairo_surface.get_data()
+            red, green, blue = ord(pixels[2]), ord(pixels[1]), ord(pixels[0])
+            #logging.error('Read color %d %d %d', red, green, blue)
+            valid_color = (red == 255 and green == 0 and blue == 0)
+            self.emit('reply-selected', valid_color)
         return True
 
     def __motion_draw_reply_cp(self, widget, event):
@@ -217,7 +255,7 @@ class PrepareQuestionsWin(gtk.HBox):
         if self.draw_reply_area is not None:
             self.scrollwin.remove(self.scrollwin.get_children()[0])
             self.draw_reply_area = None
-        self.draw_reply_area = DrawReplyArea(file_path)
+        self.draw_reply_area = DrawReplyArea(file_path, edit=True)
         self.scrollwin.add_with_viewport(self.draw_reply_area)
         # copy to resources directory
         self.model.check_resources_directory()
