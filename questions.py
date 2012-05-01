@@ -5,6 +5,8 @@ import os
 import shutil
 import cairo
 
+from gobject import SIGNAL_RUN_FIRST
+
 from gettext import gettext as _
 
 from sugar.activity import activity
@@ -136,6 +138,10 @@ class DrawReplyArea(gtk.DrawingArea):
 
 
 class PrepareQuestionsWin(gtk.HBox):
+
+    __gsignals__ = {
+        'question_updated': (SIGNAL_RUN_FIRST, None, [])
+    }
 
     def __init__(self, activity):
         gtk.HBox.__init__(self)
@@ -383,6 +389,7 @@ class PrepareQuestionsWin(gtk.HBox):
                         self.quest_listview.get_selection())
             self._modified_data = False
             self._selected_key = None
+            self.emit('question_updated')
 
     def add_question(self):
         if self._modified_data:
@@ -397,3 +404,4 @@ class PrepareQuestionsWin(gtk.HBox):
                                 {'text':'', 'valid':False}]}
 
         self._display_question(question, display_empty_entries=True)
+        self.emit('question_updated')

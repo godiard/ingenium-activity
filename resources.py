@@ -269,7 +269,9 @@ class CollectResourcesWin(gtk.HBox):
         # show as
         self.show_as_icon_check.set_active(resource['show_as'] is not None)
         self._iconview.set_sensitive(self.show_as_icon_check.get_active())
-        self._set_show_as_icon_label(self._get_image_name(resource['show_as']))
+        if resource['show_as'] is not None:
+            self._set_show_as_icon_label(
+                    self._get_image_name(resource['show_as']))
 
         self._modified_data = False
 

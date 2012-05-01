@@ -93,6 +93,9 @@ class MapNavView(gtk.DrawingArea):
             self.queue_draw_area(*rect)
         return True
 
+    def clear_cache(self):
+        self.cache_info = {}
+
     def __key_press_event_cb(self, widget, event):
         keyname = gtk.gdk.keyval_name(event.keyval)
         if keyname not in ('Up', 'KP_Up', 'Down', 'KP_Down', 'Left', 'KP_Left',

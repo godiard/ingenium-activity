@@ -117,8 +117,6 @@ class IngeniumMachinaActivity(activity.Activity):
         self.prepare_questions_win = None
         self.edit_map_win = None
         self.edit_descriptions_win = None
-        self.views_connected = False
-        self.resources_maps_connected = False
 
         # init game
         self.activity_mode = PLAY_MODE
@@ -140,19 +138,11 @@ class IngeniumMachinaActivity(activity.Activity):
         else:
             self.game_map = GameMap(self.model.data['map_data'])
         self.mapnav_game = MapNavView(self.game_map, self.model)
-        self.mapnav_game.view_mode = MapNavView.MODE_PLAY
         self.mapnav_game.show()
         self.mapnav_game.connect('resource-clicked',
                 self.__resource_clicked_cb)
         self.mapnav_game.connect('question-clicked',
                 self.__question_clicked_cb)
-
-        # Try connect withthe edition map
-        if self.edit_map_win is not None and not self.views_connected:
-            logging.error('Connecting signal map-updated')
-            self.edit_map_win.nav_view.connect('map-updated',
-                self.mapnav_game.receive_update_wall_info)
-            self.views_connected = True
         return self.mapnav_game
 
     def __change_mode_cb(self, button):
@@ -170,6 +160,7 @@ class IngeniumMachinaActivity(activity.Activity):
         else:
             self.activity_mode = PLAY_MODE
             self.main_notebook.set_current_page(0)
+            self.mapnav_game.clear_cache()
         self.update_buttons_state()
 
     def __add_cb(self, button):
@@ -214,6 +205,8 @@ class IngeniumMachinaActivity(activity.Activity):
             self.prepare_questions_win = PrepareQuestionsWin(self)
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.prepare_questions_win)
+            self.prepare_questions_win.connect('question_updated',
+                    self.__question_updated_cb)
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_QUESTIONS_ACTION
 
@@ -223,33 +216,31 @@ class IngeniumMachinaActivity(activity.Activity):
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.collect_resources_win)
             # connect signal to know if the resources are updated
-            if self.edit_map_win is not None and \
-                    not self.resources_maps_connected:
-                logging.error('Connecting signal resource_updated')
-                self.collect_resources_win.connect('resource_updated',
-                        self.edit_map_win.load_resources_and_questions)
+            self.collect_resources_win.connect('resource_updated',
+                    self.__resources_updated_cb)
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_RESOURCES_ACTION
+
+    def __resources_updated_cb(self, origin):
+        logging.error('** Resources updated signal')
+        if self.edit_map_win is not None:
+            self.edit_map_win.load_resources_and_questions()
+
+    def __question_updated_cb(self, origin):
+        logging.error('** Questions updated signal')
+        if self.edit_map_win is not None:
+            self.edit_map_win.load_resources_and_questions()
 
     def __map_button_cb(self, button):
         if self.edit_map_win is None:
             self.edit_map_win = EditMapWin(self.model)
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.edit_map_win)
-            # connect signal to know if the resources are updated
-            if self.collect_resources_win is not None and \
-                    not self.resources_maps_connected:
-                logging.error('Connecting signal resource_updated')
-                self.collect_resources_win.connect('resource_updated',
-                        self.edit_map_win.load_resources_and_questions)
 
             # Try connect with the playing map
-            if self.edit_descriptions_win is not None and not \
-                    self.views_connected:
-                logging.error('Connecting signal map-updated')
-                self.edit_map_win.nav_view.connect('map-updated',
-                    self.mapnav_game.receive_update_wall_info)
-                self.views_connected = True
+            logging.error('Connecting signal map-updated')
+            self.edit_map_win.nav_view.connect('map-updated',
+                self.mapnav_game.receive_update_wall_info)
 
         self.main_notebook.set_current_page(button.page)
         self.action = EDIT_MAP_ACTION
