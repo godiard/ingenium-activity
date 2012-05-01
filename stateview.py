@@ -39,6 +39,7 @@ class StateView():
 
         scale = float(self._svg_width) / float(self._cell_size)
         print "scale", scale
+        ctx.save()
         ctx.translate(self._x, self._y)
         for n in range(cant_questions):
             if n < replied_questions:
@@ -55,6 +56,7 @@ class StateView():
                 ctx.paint_with_alpha(0.25)
             ctx.scale(scale, scale)
             ctx.translate(self._cell_size, 0)
+        ctx.restore()
 
 
 def main():
