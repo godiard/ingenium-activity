@@ -15,12 +15,11 @@ import math
 
 class StateView():
 
-    def __init__(self, model, x, y, width, height):
+    def __init__(self, model, x, y, cell_size):
         self.model = model
         self._x = x
         self._y = y
-        self._width = width
-        self._height = height
+        self._cell_size = cell_size
         svg = rsvg.Handle(file='./icons/question.svg')
         self._tmp_image = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                 svg.props.width, svg.props.height)
@@ -33,19 +32,17 @@ class StateView():
         cant_questions = len(self.model.data['questions'])
         if cant_questions == 0:
             return
-        icon_size = int(self._width / cant_questions)  # margin
-        print "icon_size", icon_size
 
         state = self.model.data['state']
-        displayed_questions = state['displayed_questions']
-        replied_questions = state['replied_questions']
+        displayed_questions = len(state['displayed_questions'])
+        replied_questions = len(state['replied_questions'])
 
-        scale = float(self._svg_width) / float(icon_size)
+        scale = float(self._svg_width) / float(self._cell_size)
         print "scale", scale
         ctx.translate(self._x, self._y)
         for n in range(cant_questions):
             if n < replied_questions:
-                radio = icon_size / 2.0
+                radio = self._cell_size / 2.0
                 ctx.arc(radio, radio, radio, 0., 2 * math.pi)
                 ctx.set_source_rgb(0.913, 0.733, 0.0)  # eebb00
                 ctx.fill()
@@ -57,13 +54,13 @@ class StateView():
             else:
                 ctx.paint_with_alpha(0.25)
             ctx.scale(scale, scale)
-            ctx.translate(icon_size, 0)
+            ctx.translate(self._cell_size, 0)
 
 
 def main():
     window = gtk.Window()
     _model = model.GameModel()
-    state_view = StateView(_model, 10, 10, 150, 200)
+    state_view = StateView(_model, 10, 10, 20)
     area = gtk.DrawingArea()
 
     # add fake questions to test

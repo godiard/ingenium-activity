@@ -11,10 +11,11 @@ import cairo
 import logging
 import rsvg
 
-from sugar.graphics.style import Color
+from sugar.graphics import style
 
 from game_map import GameMap
 from character import Character
+from stateview import StateView
 import mapview
 
 WIDTH_CONTROL_LINES = 2
@@ -48,8 +49,9 @@ class MapNavView(gtk.DrawingArea):
     MODE_PLAY = 0
     MODE_EDIT = 1
 
-    def __init__(self, game_map, mode=MODE_PLAY):
+    def __init__(self, game_map, model, mode=MODE_PLAY):
         self._game_map = game_map
+        self._model = model
         self.x = 0
         self.y = 0
         self.direction = 'S'
@@ -79,7 +81,10 @@ class MapNavView(gtk.DrawingArea):
         self._setup_handle = self.connect('size_allocate',
                                           size_allocate_cb)
 
+        self._state_view = None
         if self.view_mode == self.MODE_PLAY:
+            cell = style.GRID_CELL_SIZE / 2
+            self._state_view = StateView(self._model, cell, cell, cell)
             gobject.timeout_add(100, self._update_timer)
 
     def _update_timer(self):
@@ -251,6 +256,7 @@ class MapNavView(gtk.DrawingArea):
             view_data = {'width': 150, 'height': 150,
                     'show_position': position, 'x': rect.width - 150, 'y': 30}
             mapview.draw(ctx, self._game_map, view_data)
+            self._state_view.draw(ctx)
             self._character.draw(ctx)
         return False
 
@@ -441,7 +447,7 @@ class MapNavView(gtk.DrawingArea):
         y = self._height - self._grid_size * (self._door_height + 1)
         ctx.rectangle(x, y, self._grid_size * self._door_width,
                 self._grid_size * self._door_height)
-        fill = (Color('#8B6914').get_rgba())
+        fill = (style.Color('#8B6914').get_rgba())
         stroke = (0, 0, 0)
         ctx.set_source_rgba(*fill)
         ctx.fill_preserve()
@@ -450,7 +456,7 @@ class MapNavView(gtk.DrawingArea):
 
         # frame
         frame_width = self._grid_size * self._door_width / 8
-        fill = (Color('#6B4904').get_rgba())
+        fill = (style.Color('#6B4904').get_rgba())
         ctx.set_source_rgba(*fill)
         ctx.rectangle(x, y, self._grid_size * self._door_width, frame_width)
         ctx.fill()

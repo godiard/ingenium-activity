@@ -26,7 +26,8 @@ class EditMapWin(gtk.HBox):
         self.model.data['map_data'] = self.game_map.data
 
         left_vbox = gtk.VBox()
-        self.nav_view = MapNavView(self.game_map, mode=MapNavView.MODE_EDIT)
+        self.nav_view = MapNavView(self.game_map, self.model,
+                mode=MapNavView.MODE_EDIT)
         self.top_view = TopMapView(self.game_map, 150, 150)
         self.top_view.show_position(self.nav_view.x, self.nav_view.y,
                 self.nav_view.direction)

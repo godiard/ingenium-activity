@@ -34,6 +34,12 @@ class GameModel:
 
         self.data['map_data'] = None
 
+        state = {'displayed_questions': [],
+                'replied_questions': [],
+                'actions_log': []}
+
+        self.data['state'] = state
+
     def get_new_resource_id(self):
         self.data['last_resource_id'] = self.data['last_resource_id'] + 1
         return self.data['last_resource_id']
@@ -41,6 +47,14 @@ class GameModel:
     def get_new_question_id(self):
         self.data['last_question_id'] = self.data['last_question_id'] + 1
         return self.data['last_question_id']
+
+    def register_displayed_question(self, id_question):
+        if id_question not in self.data['state']['displayed_questions']:
+            self.data['state']['displayed_questions'].append(id_question)
+
+    def register_replied_question(self, id_question):
+        if id_question not in self.data['state']['replied_questions']:
+            self.data['state']['replied_questions'].append(id_question)
 
     def get_resource(self, id_resource):
         for resource in self.data['resources']:

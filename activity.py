@@ -139,7 +139,7 @@ class IngeniumMachinaActivity(activity.Activity):
             self.game_map = GameMap()
         else:
             self.game_map = GameMap(self.model.data['map_data'])
-        self.mapnav_game = MapNavView(self.game_map)
+        self.mapnav_game = MapNavView(self.game_map, self.model)
         self.mapnav_game.view_mode = MapNavView.MODE_PLAY
         self.mapnav_game.show()
         self.mapnav_game.connect('resource-clicked',
@@ -277,9 +277,12 @@ class IngeniumMachinaActivity(activity.Activity):
         question_dialog.set_transient_for(self.get_toplevel())
         question_dialog.connect('reply-selected', self.__question_replied_cb)
         question_dialog.show_all()
+        self.model.register_displayed_question(id_question)
 
     def __question_replied_cb(self, dialog, id_question, valid):
         logging.error('** Question %s replied %s', id_question, valid)
+        if valid:
+            self.model.register_replied_question(id_question)
 
     def read_file(self, file_path):
         '''Read file from Sugar Journal.'''
