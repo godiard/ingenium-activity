@@ -130,6 +130,9 @@ class IngeniumMachinaActivity(activity.Activity):
         self.main_notebook.show_all()
         self.set_canvas(self.main_notebook)
 
+        if handle.object_id is None:
+            self.main_notebook.append_page(self.create_play_view())
+
     def create_play_view(self):
         if not 'map_data' in self.model.data or \
             self.model.data['map_data'] is None:
