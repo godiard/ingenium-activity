@@ -11,6 +11,7 @@ import cairo
 import rsvg
 import model
 import math
+import logging
 
 
 class StateView():
@@ -38,7 +39,7 @@ class StateView():
         replied_questions = len(state['replied_questions'])
 
         scale = float(self._svg_width) / float(self._cell_size)
-        print "scale", scale
+        logging.error('draw stateview scale %s', scale)
         ctx.save()
         ctx.translate(self._x, self._y)
         for n in range(cant_questions):

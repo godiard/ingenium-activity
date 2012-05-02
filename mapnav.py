@@ -70,12 +70,15 @@ class MapNavView(gtk.DrawingArea):
         self.connect('button_release_event', self.__button_release_event_cb)
 
         self._character = Character(self)
+        self._is_walking = False
 
         def size_allocate_cb(widget, allocation):
             self.calculate_sizes(allocation.width, allocation.height)
             if self.view_mode == self.MODE_PLAY:
                 character_y = allocation.height - self._grid_size
                 self._character.pos = [0, character_y]
+                self._character.direction = 1
+                self._character.change_animation('stand', flip_x=1)
             self.disconnect(self._setup_handle)
 
         self._setup_handle = self.connect('size_allocate',
@@ -85,13 +88,6 @@ class MapNavView(gtk.DrawingArea):
         if self.view_mode == self.MODE_PLAY:
             cell = style.GRID_CELL_SIZE / 2
             self._state_view = StateView(self._model, cell, cell, cell)
-            gobject.timeout_add(100, self._update_timer)
-
-    def _update_timer(self):
-        if self.is_drawable():
-            rect = self._character.update()
-            self.queue_draw_area(*rect)
-        return True
 
     def clear_cache(self):
         self.cache_info = {}
@@ -176,11 +172,70 @@ class MapNavView(gtk.DrawingArea):
                     self.selected.y = event.y
                     self.update_wall_info(self.x, self.y, self.direction)
 
-        if self.view_mode == self.MODE_EDIT:
+        if self.view_mode == self.MODE_PLAY and not self._is_walking:
             # verify doors
+            if info_walls['have_door'] != []:
+                door_x = self._get_door_x()
+                door_y = self._get_door_y()
+                door_width = self._grid_size * self._door_width
+                door_height = self._grid_size * self._door_height
+                if door_x < event.x < door_x + door_width and \
+                    door_y < event.y < door_y + door_height:
+                    logging.error('Door clicked')
+                    new_x, new_y, new_direction = self._game_map.cross_door(
+                            self.x, self.y, self.direction)
+                    self._move_character(door_x + door_width / 2, new_x,
+                            new_y, new_direction)
+            # verify lateral walls
+            if event.x < self._grid_size:
+                logging.error('Left wall clicked')
+                new_x, new_y, new_direction = self._game_map.go_left(self.x,
+                        self.y, self.direction)
+                self._move_character(0, new_x, new_y, new_direction)
 
-            # verify lateral doors
-            pass
+            elif event.x > self._width - self._grid_size:
+                logging.error('Right wall clicked')
+                new_x, new_y, new_direction = self._game_map.go_right(self.x,
+                        self.y, self.direction)
+                self._move_character(self._width, new_x, new_y,
+                        new_direction)
+            else:
+                self._move_character(event.x, self.x, self.y, self.direction)
+
+    def _move_character(self, character_destination, new_map_x, new_map_y,
+            new_map_direction):
+        """
+        Move the character to the next position,
+        if needed, because the character is going to another wall or
+        to a door, change the map view position
+        """
+        character_pos = self._character.pos[0]
+        if character_destination < character_pos:
+            self._character.direction = -1
+        else:
+            self._character.direction = 1
+        self._character_destination = character_destination
+        self._new_map_position = (new_map_x, new_map_y, new_map_direction)
+        gobject.timeout_add(100, self._update_timer)
+
+    def _update_timer(self):
+        self._is_walking = True
+        if self.is_drawable():
+            rect = self._character.update()
+            self.queue_draw_area(*rect)
+        finish = abs(self._character_destination - self._character.pos[0]) < \
+                self._character.speed
+        if finish:
+            self._is_walking = False
+            if (self.x, self.y, self.direction) != self._new_map_position:
+                self.x, self.y, self.direction = self._new_map_position
+                self.emit('position-changed', self.x, self.y, self.direction)
+                if self._character.pos[0] >= self._width - self._grid_size:
+                    self._character.pos[0] = self._grid_size
+                elif self._character.pos[0] < self._grid_size:
+                    self._character.pos[0] = self._width - self._grid_size
+                self.queue_draw()
+        return not finish
 
     def __motion_notify_event_cb(self, widget, event):
         if self.view_mode == self.MODE_EDIT:
@@ -345,13 +400,8 @@ class MapNavView(gtk.DrawingArea):
         ctx.stroke()
 
         if info_walls['have_door'] != []:
-            if self.direction in ('N', 'W'):
-                # door is at rigth of the wall
-                x = self._width - self._grid_size * (self._door_width + 2)
-            else:
-                x = self._grid_size * 2
-
-            self.draw_door(ctx, x, info_walls['have_door'])
+            x_door = self._get_door_x()
+            self.draw_door(ctx, x_door, info_walls['have_door'])
 
         if info_walls['wall_cw']:
             ctx.move_to(self._width - self._grid_size, 0)
@@ -446,8 +496,18 @@ class MapNavView(gtk.DrawingArea):
                             RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE)
                     ctx.stroke()
 
+    def _get_door_x(self):
+        if self.direction in ('N', 'W'):
+            # door is at rigth of the wall
+            return self._width - self._grid_size * (self._door_width + 2)
+        else:
+            return self._grid_size * 2
+
+    def _get_door_y(self):
+        return self._height - self._grid_size * (self._door_height + 1)
+
     def draw_door(self, ctx, x, doors):
-        y = self._height - self._grid_size * (self._door_height + 1)
+        y = self._get_door_y()
         ctx.rectangle(x, y, self._grid_size * self._door_width,
                 self._grid_size * self._door_height)
         fill = (style.Color('#8B6914').get_rgba())
