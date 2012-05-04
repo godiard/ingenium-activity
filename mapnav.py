@@ -153,10 +153,13 @@ class MapNavView(gtk.DrawingArea):
                     self.update_wall_info(self.x, self.y, self.direction)
                 else:
                     # in play mode trigger event
-                    if wall_object['type_object'] == 'resource':
-                        self.emit('resource-clicked', wall_object['id_object'])
-                    if wall_object['type_object'] == 'question':
-                        self.emit('question-clicked', wall_object['id_object'])
+                    if 'type_object' in wall_object:
+                        if wall_object['type_object'] == 'resource':
+                            self.emit('resource-clicked',
+                                    wall_object['id_object'])
+                        if wall_object['type_object'] == 'question':
+                            self.emit('question-clicked',
+                                    wall_object['id_object'])
 
             if self.view_mode == self.MODE_EDIT:
                 # check resize
