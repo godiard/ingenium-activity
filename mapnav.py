@@ -76,7 +76,7 @@ class MapNavView(gtk.DrawingArea):
             self.calculate_sizes(allocation.width, allocation.height)
             if self.view_mode == self.MODE_PLAY:
                 character_y = allocation.height - self._grid_size
-                self._character.pos = [0, character_y]
+                self._character.pos = [style.GRID_CELL_SIZE , character_y]
                 self._character.direction = 1
                 self._character.change_animation('stand', flip_x=1)
             self.disconnect(self._setup_handle)
@@ -236,7 +236,10 @@ class MapNavView(gtk.DrawingArea):
                 if self._character.pos[0] >= self._width - self._grid_size:
                     self._character.pos[0] = self._grid_size
                 elif self._character.pos[0] < self._grid_size:
-                    self._character.pos[0] = self._width - self._grid_size
+                    # TODO: we should expose this value
+                    char_width = self._character.sprite.cel_width
+                    self._character.pos[0] = \
+                            self._width - self._grid_size - char_width
                 self.queue_draw()
         return not finish
 
