@@ -2,9 +2,8 @@ PENDIENTE:
 
 Edicion
 
-* Agregar preguntas al mapa
-* Preguntas graficas
-* Agregar pantallas para cargar las consignas iniciales y la palabra clave.
+* Agregar pantallas para cargar las consignas iniciales y cantidad de "vidas".
+(preguntas incorrectas posibles)
 
 * En la edicion del mapa, limitar las posiciones de los objetos al rectangulo
 de la pared. (No paredes laterales, chequear piso si es posible)
@@ -12,14 +11,21 @@ de la pared. (No paredes laterales, chequear piso si es posible)
 * Si borro un recurso en la pantalla de recursos se tiene que borrar del mapa,
 o no dejar borrar si esta usado en el mapa.
 
+* Las preguntas gráficas se tienen que mostrar escaladas al tamaño de la edicion
+
+* Generar actividad.
+
+* En el abm de recursos, solo habilitar agregar si se agrega una imagen y un titulo
+(o mostrar un alert pidiendo que lo carguen)
+
 Juego
 
-* Mejorar el modo juego en mapnav (disparar eventos cuando se hace click en una 
-puerta o en las areas laterales para navegar con el mouse)
-* Sprite animado
-* Personaje
-* Popup de preguntas
-* Control de preguntas correctas/incorrectas fin de juego.
+* Personaje no vuelve
+* El personaje tiene que doblar cuando hay una pared o para ir a una puerta
+* Las preguntas gráficas se tienen que mostrar escaladas al tamaño del popup.
+* Mostrar feedback con preguntas correctas / incorrectas
+* Mostrar consigna inicial.
+* El personaje no esta pasando las puertas (y andaba)
 
 Arte:
 * Telescopio / Ventana dia / Ventana noche
@@ -40,6 +46,8 @@ Edicion
 tiene que notificar ese codigo para poder mostrarlo.
 * Agregar opcion de mostrar un recurso con otro icono (microscopio, libro,
 diario, computadora, xo)
+* Agregar preguntas al mapa
+* Preguntas graficas
 
 
 Juego
@@ -47,3 +55,9 @@ Juego
 * Al hacer click en un recurso, abre una ventana mostrando la informacion.
 * Navegacion con teclas deshabilitado.
 * Mostrar el mapa en el mismo ctx en el modo juego
+* Mejorar el modo juego en mapnav (disparar eventos cuando se hace click en una
+puerta o en las areas laterales para navegar con el mouse)
+* Sprite animado
+* Popup de preguntas
+* Control de preguntas correctas/incorrectas fin de juego.
+* No redibujar el stateview si no cambia el estado.
