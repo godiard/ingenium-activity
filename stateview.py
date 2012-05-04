@@ -27,6 +27,10 @@ class StateView():
         self._tmp_ctx = cairo.Context(self._tmp_image)
         svg.render_cairo(self._tmp_ctx)
         self._svg_width = svg.props.width
+        # last values to avoid redraws
+        self._last_cant_questions = 0
+        self._last_displayed_questions = 0
+        self._last_replied_questions = 0
 
     def draw(self, ctx):
         # calculate cell size
@@ -38,6 +42,14 @@ class StateView():
         displayed_questions = len(state['displayed_questions'])
         replied_questions = len(state['replied_questions'])
 
+        if self._last_cant_questions != cant_questions or \
+                self._last_displayed_questions != displayed_questions or \
+                self._last_replied_questions != replied_questions:
+            self._last_cant_questions = cant_questions
+            self._last_displayed_questions = displayed_questions
+            self._last_replied_questions = replied_questions
+        else:
+            return
         scale = float(self._svg_width) / float(self._cell_size)
         logging.error('draw stateview scale %s', scale)
         ctx.save()
