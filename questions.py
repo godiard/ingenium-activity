@@ -13,6 +13,9 @@ from sugar.activity import activity
 from sugar.graphics.icon import Icon
 from sugar.graphics.objectchooser import ObjectChooser
 
+SMILIES_OK = ['cool', 'grin', 'nerd', 'smile', 'wink']
+SMILIES_WRONG = ['sad', 'sick', 'weep']
+
 
 class DrawReplyArea(gtk.DrawingArea):
 

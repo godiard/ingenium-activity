@@ -26,7 +26,7 @@ from sugar.graphics import style
 from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.icon import Icon
 
-from questions import DrawReplyArea
+import questions
 
 
 class _DialogWindow(gtk.Window):
@@ -157,9 +157,18 @@ class QuestionDialog(_DialogWindow):
 
         scrollwin = gtk.ScrolledWindow()
         scrollwin.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-        self.content_vbox.pack_start(scrollwin)
         vbox = gtk.VBox()
         scrollwin.add_with_viewport(vbox)
+
+        self.notebook = gtk.Notebook()
+        self.notebook.set_show_tabs(False)
+        # add a page with the controls to reply the question
+        self.notebook.append_page(scrollwin)
+        # ... and another to show the smiley according to the result
+        self.image_result = gtk.Image()
+        self.notebook.append_page(self.image_result)
+
+        self.content_vbox.pack_start(self.notebook, True, True)
 
         question_type = question['type']
 
@@ -182,16 +191,42 @@ class QuestionDialog(_DialogWindow):
             image_path = question['file_image']
             reply_image_path = question['file_image_reply']
 
-            self.draw_reply_area = DrawReplyArea(image_path,
+            self.draw_reply_area = questions.DrawReplyArea(image_path,
                     reply_file_name=reply_image_path)
             vbox.pack_start(self.draw_reply_area, False, padding=5)
             self.draw_reply_area.connect('reply-selected',
                     self.__draw_reply_click_cb)
 
     def __button_reply_click_cb(self, widget, valid_reply):
-        self.emit('reply-selected', self._id_question, valid_reply)
-        self.destroy()
+        self._show_reply_feedback(valid_reply)
 
     def __draw_reply_click_cb(self, widget, valid_reply):
-        self.emit('reply-selected', self._id_question, valid_reply)
+        self._show_reply_feedback(valid_reply)
+
+    def _change_page(self):
+        self.notebook.set_current_page(1)
+        self.window.set_cursor(None)
+        # wait 3 seconds
+        #report and close
+        gobject.timeout_add_seconds(3, self._close_all)
+
+    def _close_all(self):
         self.destroy()
+
+    def _show_reply_feedback(self, valid_reply):
+        # load smiley image
+        self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.WATCH))
+        if valid_reply:
+            smiley = random.choice(questions.SMILIES_OK)
+        else:
+            smiley = random.choice(questions.SMILIES_WRONG)
+        image_file_name = './images/smilies/%s.svg' % smiley
+        size = gtk.gdk.screen_height() / 2
+        pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, size,
+                size)
+        self.image_result.set_from_pixbuf(pixbuf)
+        # report result
+        self.emit('reply-selected', self._id_question, valid_reply)
+
+        # wait one second and change the page
+        gobject.timeout_add_seconds(1, self._change_page)
