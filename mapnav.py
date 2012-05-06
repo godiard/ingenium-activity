@@ -177,33 +177,49 @@ class MapNavView(gtk.DrawingArea):
 
         if self.view_mode == self.MODE_PLAY and not self._is_walking:
             # verify doors
-            if info_walls['have_door'] != []:
-                door_x = self._get_door_x()
-                door_y = self._get_door_y()
-                door_width = self._grid_size * self._door_width
-                door_height = self._grid_size * self._door_height
-                if door_x < event.x < door_x + door_width and \
-                    door_y < event.y < door_y + door_height:
-                    logging.error('Door clicked')
-                    new_x, new_y, new_direction = self._game_map.cross_door(
-                            self.x, self.y, self.direction)
-                    self._move_character(door_x + door_width / 2, new_x,
-                            new_y, new_direction)
+            if self._check_over_door(info_walls, event.x, event.y):
+                new_x, new_y, new_direction = self._game_map.cross_door(
+                        self.x, self.y, self.direction)
+                self._move_character(event.x, new_x,
+                        new_y, new_direction)
             # verify lateral walls
-            if event.x < self._grid_size:
-                logging.error('Left wall clicked')
+            elif self._check_left_wall(event.x):
                 new_x, new_y, new_direction = self._game_map.go_left(self.x,
                         self.y, self.direction)
                 self._move_character(0, new_x, new_y, new_direction)
 
-            elif event.x > self._width - self._grid_size:
-                logging.error('Right wall clicked')
+            elif self._check_right_wall(event.x):
                 new_x, new_y, new_direction = self._game_map.go_right(self.x,
                         self.y, self.direction)
                 self._move_character(self._width, new_x, new_y,
                         new_direction)
             else:
                 self._move_character(event.x, self.x, self.y, self.direction)
+
+    def _check_over_door(self, info_walls, x, y):
+        # verify doors
+        if info_walls['have_door'] != []:
+            door_x = self._get_door_x()
+            door_y = self._get_door_y()
+            door_width = self._grid_size * self._door_width
+            door_height = self._grid_size * self._door_height
+            if door_x < x < door_x + door_width and \
+                door_y < y < door_y + door_height:
+                logging.error('Door clicked')
+                return True
+        return False
+
+    def _check_left_wall(self, x):
+        if x < self._grid_size:
+            logging.error('Left wall clicked')
+            return True
+        return False
+
+    def _check_right_wall(self, x):
+        if x > self._width - self._grid_size:
+            logging.error('Right wall clicked')
+            return True
+        return False
 
     def _move_character(self, character_destination, new_map_x, new_map_y,
             new_map_direction):
