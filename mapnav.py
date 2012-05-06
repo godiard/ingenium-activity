@@ -285,7 +285,7 @@ class MapNavView(gtk.DrawingArea):
             info_walls = self.get_information_walls(self.x, self.y,
                     self.direction)
             if self._check_over_door(info_walls, event.x, event.y):
-                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.CENTER_PTR))
+                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.SB_UP_ARROW))
             # verify lateral walls
             elif self._check_left_wall(event.x):
                 self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.SB_LEFT_ARROW))
