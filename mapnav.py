@@ -281,6 +281,18 @@ class MapNavView(gtk.DrawingArea):
                         self.selected.data['original']['wall_scale'] = \
                                 wall_scale + 0.01
                     self.update_wall_info(self.x, self.y, self.direction)
+        if self.view_mode == self.MODE_PLAY:
+            info_walls = self.get_information_walls(self.x, self.y,
+                    self.direction)
+            if self._check_over_door(info_walls, event.x, event.y):
+                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.CENTER_PTR))
+            # verify lateral walls
+            elif self._check_left_wall(event.x):
+                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.SB_LEFT_ARROW))
+            elif self._check_right_wall(event.x):
+                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.SB_RIGHT_ARROW))
+            else:
+                self.window.set_cursor(None)
 
     def __button_release_event_cb(self, widget, event):
         if self.selected is not None:
