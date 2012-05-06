@@ -169,6 +169,7 @@ class QuestionDialog(_DialogWindow):
         self.notebook.append_page(self.image_result)
 
         self.content_vbox.pack_start(self.notebook, True, True)
+        self.content_vbox.set_border_width(0)
 
         question_type = question['type']
 
