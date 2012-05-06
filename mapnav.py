@@ -76,7 +76,7 @@ class MapNavView(gtk.DrawingArea):
             self.calculate_sizes(allocation.width, allocation.height)
             if self.view_mode == self.MODE_PLAY:
                 character_y = allocation.height - self._grid_size
-                self._character.pos = [style.GRID_CELL_SIZE , character_y]
+                self._character.pos = [style.GRID_CELL_SIZE, character_y]
                 self._character.direction = 1
                 self._character.change_animation('stand', flip_x=1)
             self.disconnect(self._setup_handle)
