@@ -114,6 +114,7 @@ class Character(object):
     def draw(self, context):
         # draw char
         dx, dy = self.pos[0], self.pos[1] - self.sprite.cel_height + 10
+        context.save()
 
         # for debug write a rectangle around
         context.rectangle(dx, dy, self.sprite.cel_width,
@@ -123,6 +124,7 @@ class Character(object):
         context.stroke()
 
         self.sprite.draw(context, dx, dy)
+        context.restore()
 
 
 def main():

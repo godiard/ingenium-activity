@@ -134,6 +134,7 @@ class TopMapView(gtk.DrawingArea):
     def expose(self, widget, event):
         rect = self.get_allocation()
         ctx = widget.window.cairo_create()
+        ctx.save()
         # set a clip region for the expose event
         ctx.rectangle(event.area.x, event.area.y, event.area.width,
                 event.area.height)
@@ -142,6 +143,7 @@ class TopMapView(gtk.DrawingArea):
                 'show_position': self._show_position}
 
         draw(ctx, self._game_map, view_data)
+        ctx.restore()
         return False
 
 

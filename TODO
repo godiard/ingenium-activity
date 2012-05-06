@@ -23,7 +23,6 @@ Juego
 * Personaje no vuelve
 * El personaje tiene que doblar cuando hay una pared o para ir a una puerta
 * Las preguntas gráficas se tienen que mostrar escaladas al tamaño del popup.
-* Mostrar feedback con preguntas correctas / incorrectas
 * Mostrar consigna inicial.
 * El personaje no esta pasando las puertas (y andaba)
 
@@ -61,3 +60,5 @@ puerta o en las areas laterales para navegar con el mouse)
 * Popup de preguntas
 * Control de preguntas correctas/incorrectas fin de juego.
 * No redibujar el stateview si no cambia el estado.
+* Mostrar feedback con preguntas correctas / incorrectas
+

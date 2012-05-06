@@ -382,7 +382,7 @@ class MapNavView(gtk.DrawingArea):
     def draw(self, ctx, clip_x, clip_y, clip_width, clip_height):
         def darken(color, factor=0.8):
             return tuple(c * factor for c in color)
-
+        ctx.save()
         x, y = self.x, self.y
         info_walls = self.get_information_walls(x, y, self.direction)
         # draw back wall
@@ -436,7 +436,7 @@ class MapNavView(gtk.DrawingArea):
             ctx.fill_preserve()
             ctx.set_source_rgb(*stroke)
             ctx.stroke()
-
+        ctx.restore()
         if info_walls['objects']:
             for wall_object in info_walls['objects']:
                 image_file_name = wall_object['image_file_name']
@@ -486,7 +486,6 @@ class MapNavView(gtk.DrawingArea):
                 wall_object['width'] = width
                 wall_object['height'] = height
 
-                ctx.restore()
                 if self.view_mode == self.MODE_EDIT and \
                     self.selected is not None and \
                     self.selected.data['original'] == wall_object['original']:
@@ -501,6 +500,7 @@ class MapNavView(gtk.DrawingArea):
                             wall_y - RESIZE_HANDLE_SIZE / 2,
                             RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE)
                     ctx.stroke()
+                ctx.restore()
 
     def _get_door_x(self):
         if self.direction in ('N', 'W'):
