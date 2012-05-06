@@ -181,6 +181,7 @@ class MapNavView(gtk.DrawingArea):
                 logging.error('Door clicked')
                 new_x, new_y, new_direction = self._game_map.cross_door(
                         self.x, self.y, self.direction)
+                self._new_wall_char_position = int(event.x)
                 self._move_character(event.x, new_x,
                         new_y, new_direction)
             # verify lateral walls
@@ -188,14 +189,23 @@ class MapNavView(gtk.DrawingArea):
                 logging.error('Left wall clicked')
                 new_x, new_y, new_direction = self._game_map.go_left(self.x,
                         self.y, self.direction)
-                self._move_character(0, new_x, new_y, new_direction)
+                char_finish = 0
+                if info_walls['wall_ccw']:
+                    char_finish = self._grid_size - 1
+                self._new_wall_char_position = self._width - self._grid_size \
+                        - self._character.sprite.cel_width
+                self._move_character(char_finish, new_x, new_y, new_direction)
 
             elif self._check_right_wall(event.x):
                 logging.error('Right wall clicked')
                 new_x, new_y, new_direction = self._game_map.go_right(self.x,
                         self.y, self.direction)
-                self._move_character(self._width, new_x, new_y,
-                        new_direction)
+                char_width = self._character.sprite.cel_width
+                char_finish = self._width - char_width + 1
+                if info_walls['wall_cw']:
+                    char_finish = char_finish - self._grid_size
+                self._new_wall_char_position = self._grid_size
+                self._move_character(char_finish, new_x, new_y, new_direction)
             else:
                 self._move_character(event.x, self.x, self.y, self.direction)
 
@@ -245,13 +255,7 @@ class MapNavView(gtk.DrawingArea):
             if (self.x, self.y, self.direction) != self._new_map_position:
                 self.x, self.y, self.direction = self._new_map_position
                 self.emit('position-changed', self.x, self.y, self.direction)
-                if self._character.pos[0] >= self._width - self._grid_size:
-                    self._character.pos[0] = self._grid_size
-                elif self._character.pos[0] < self._grid_size:
-                    # TODO: we should expose this value
-                    char_width = self._character.sprite.cel_width
-                    self._character.pos[0] = \
-                            self._width - self._grid_size - char_width
+                self._character.pos[0] = self._new_wall_char_position
                 self.queue_draw()
         return not finish
 
