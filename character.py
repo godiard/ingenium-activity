@@ -23,7 +23,7 @@ class Sprite(object):
     def load_svg(self):
         self._svg = rsvg.Handle(file=self.svg_file)
         self._svg_width = self._svg.props.width
-        """
+
         # create a cache with the image rendered
         self.cache = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                 self._svg.props.width, self._svg.props.height)
@@ -36,15 +36,14 @@ class Sprite(object):
                 self._svg.props.width, self._svg.props.height)
         self.cache_inv_context = cairo.Context(self.cache_inv)
         self.cache_inv_context.scale(-1, 1)
+        self.cache_inv_context.translate(-self._svg.props.width, 0)
         self._svg.render_cairo(self.cache_inv_context)
         self.cache_inv.flush()
-        """
 
     def change_animation(self, animation_name, direction=1):
         self.current_animation = animation_name
         self._current_data = self._animation_data[animation_name]
         self._animation_index = 0
-        #self.direction = direction
         if self.direction == -1:
             self._current_data = list(reversed(self._current_data))
 
@@ -56,23 +55,26 @@ class Sprite(object):
 
     def draw(self, context, dx, dy):
         cel_x, cel_y = self._current_data[self._animation_index]
-        context.scale(self.direction, 1)
-        #if self.direction == 1:
-        #    context.set_source_surface(self.cache)
-        #else:
-        #    context.set_source_surface(self.cache_inv)
-        context.translate(dx, dy)
 
-        context.translate(-cel_x * self.cel_width * self.direction,
-                          -cel_y * self.cel_height)
-        context.rectangle(cel_x * self.cel_width * self.direction,
-                          cel_y * self.cel_height,
-                          self.cel_width, self.cel_height)
-        if self.direction == -1:
-            context.translate(-self._svg_width, 0)
+        # another context to draw only one cell
+        self.one_cell = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                self.cel_width, self._svg.props.height)
+        self.one_cell_context = cairo.Context(self.one_cell)
+
+        if self.direction == 1:
+            self.one_cell_context.set_source_surface(self.cache,
+                    -cel_x * self.cel_width, 0)
+        else:
+            self.one_cell_context.set_source_surface(self.cache_inv,
+                    -cel_x * self.cel_width, 0)
+
+        self.one_cell_context.paint()
+
+        context.translate(dx, dy)
+        context.set_source_surface(self.one_cell)
+        context.rectangle(0, 0, self.cel_width, self.cel_height)
         context.clip()
-        #context.paint()
-        self._svg.render_cairo(context)
+        context.paint()
 
 
 class Character(object):
@@ -95,17 +97,6 @@ class Character(object):
     def update(self):
         self.sprite.direction = self.direction
         self.sprite.next_frame()
-        """
-        if self.direction == 1 and self.pos[0] > 600:
-            self.pos[0] += self.sprite.cel_width
-            self.direction = -1
-            self.sprite.change_animation('walk', -1)
-        elif self.direction == -1 and self.pos[0] < 0:
-            self.pos[0] -= self.sprite.cel_width
-            self.direction = 1
-            self.sprite.change_animation('walk')
-        else:
-        """
         self.pos[0] += self.speed * self.direction
         return (self.pos[0],
                 self.pos[1] - self.sprite.cel_height + 10,
@@ -117,12 +108,13 @@ class Character(object):
         context.save()
 
         # for debug write a rectangle around
+        """
         context.rectangle(dx, dy, self.sprite.cel_width,
                 self.sprite.cel_height)
         stroke = (0, 0, 0)
         context.set_source_rgb(*stroke)
         context.stroke()
-
+        """
         self.sprite.draw(context, dx, dy)
         context.restore()
 
