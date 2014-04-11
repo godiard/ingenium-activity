@@ -64,7 +64,7 @@ class MapNavView(Gtk.DrawingArea):
         self.add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.POINTER_MOTION_MASK |
                 Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK |
                 Gdk.EventMask.BUTTON1_MOTION_MASK)
-        self.connect('expose_event', self.expose)
+        self.connect('draw', self.__draw_cb)
         self.connect('key-press-event', self.__key_press_event_cb)
         self.connect('button_press_event', self.__button_press_event_cb)
         self.connect('motion_notify_event', self.__motion_notify_event_cb)
@@ -332,17 +332,17 @@ class MapNavView(Gtk.DrawingArea):
         self._door_width = 3
         self._door_height = 6
 
-    def expose(self, widget, event):
-        rect = self.get_allocation()
+    def __draw_cb(self, widget, ctx):
         ctx = widget.window.cairo_create()
+        rect = self.get_allocation()
         # set a clip region for the expose event
-        ctx.rectangle(event.area.x, event.area.y, event.area.width,
-                event.area.height)
-        ctx.clip()
+        #ctx.rectangle(event.area.x, event.area.y, event.area.width,
+        #        event.area.height)
+        #ctx.clip()
         #logging.error('expose clipping area %d %d %d %d', event.area.x,
         #        event.area.y, event.area.width, event.area.height)
-        self.draw(ctx, event.area.x, event.area.y, event.area.width,
-                event.area.height)
+        clip_x, clip_y, clip_width, clip_height = ctx.clip_extents()
+        self.draw(ctx, clip_x, clip_y, clip_width, clip_height)
 
         if self.view_mode == self.MODE_PLAY:
             position = {'x': self.x, 'y': self.y, 'direction': self.direction}

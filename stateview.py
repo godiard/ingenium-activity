@@ -89,12 +89,11 @@ def main():
     state = {'displayed_questions': 3, 'replied_questions': 2}
     _model.data['state'] = state
 
-    def expose(widget, event, state_view):
-        ctx = widget.window.cairo_create()
+    def __draw_cb(widget, ctx, state_view):
         state_view.draw(ctx)
         return False
 
-    area.connect('expose_event', expose, state_view)
+    area.connect('draw', __draw_cb, state_view)
 
     window.add(area)
     window.connect("destroy", Gtk.main_quit)

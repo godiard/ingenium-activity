@@ -36,7 +36,7 @@ class DrawReplyArea(Gtk.DrawingArea):
                 self._width, self._height)
 
         # Signals used to handle backing pixmap
-        self.connect("expose_event", self.__expose_draw_reply_cb)
+        self.connect("draw", self.__draw_cb)
         # Event signals
 
         if self._edit:
@@ -71,10 +71,10 @@ class DrawReplyArea(Gtk.DrawingArea):
         return True
 
     # Redraw the screen from the backing pixmap
-    def __expose_draw_reply_cb(self, widget, event):
+    def __draw_cb(self, widget, ctx):
         if self.background is None:
             self.setup()
-        x, y, width, height = event.area
+        x, y, width, height = ctx.clip_extents()
         widget.window.draw_drawable(widget.get_style().fg_gc[Gtk.StateType.NORMAL],
                                 self.background, x, y, x, y, width, height)
         if self._edit:

@@ -120,7 +120,7 @@ class TopMapView(Gtk.DrawingArea):
         self._show_position = None
         super(TopMapView, self).__init__()
         self.set_size_request(width, height)
-        self.connect('expose_event', self.expose)
+        self.connect('draw', self.__draw_cb)
 
     def show_position(self, x, y, direction):
         self._show_position = {'x': x, 'y': y, 'direction': direction}
@@ -130,14 +130,12 @@ class TopMapView(Gtk.DrawingArea):
         self._show_position = None
         self.queue_draw()
 
-    def expose(self, widget, event):
-        #rect = self.get_allocation()
-        ctx = widget.window.cairo_create()
+    def __draw_cb(self, widget, ctx):
         ctx.save()
         # set a clip region for the expose event
-        ctx.rectangle(event.area.x, event.area.y, event.area.width,
-                event.area.height)
-        ctx.clip()
+        #ctx.rectangle(event.area.x, event.area.y, event.area.width,
+        #        event.area.height)
+        #ctx.clip()
         view_data = {'width': self._width, 'height': self._height,
                 'show_position': self._show_position}
 
