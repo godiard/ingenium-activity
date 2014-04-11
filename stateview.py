@@ -7,8 +7,8 @@
 # how many have been read, and how many have been replied.
 
 from gi.repository import Gtk
+from gi.repository import Rsvg
 import cairo
-import rsvg
 import model
 import math
 import logging
@@ -21,7 +21,7 @@ class StateView():
         self._x = x
         self._y = y
         self._cell_size = cell_size
-        svg = rsvg.Handle(file='./icons/question.svg')
+        svg = Rsvg.Handle.new_from_file('./icons/question.svg')
         self._tmp_image = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                 svg.props.width, svg.props.height)
         self._tmp_ctx = cairo.Context(self._tmp_image)

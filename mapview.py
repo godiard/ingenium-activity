@@ -6,7 +6,6 @@
 # The class TopMapView draw a map from the top
 
 from gi.repository import Gtk
-import cairo
 from game_map import GameMap
 
 # view_data =  width, height, show_position
@@ -132,7 +131,7 @@ class TopMapView(Gtk.DrawingArea):
         self.queue_draw()
 
     def expose(self, widget, event):
-        rect = self.get_allocation()
+        #rect = self.get_allocation()
         ctx = widget.window.cairo_create()
         ctx.save()
         # set a clip region for the expose event

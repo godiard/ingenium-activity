@@ -6,10 +6,11 @@
 # The class MapNavView draw a map from the top
 
 from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
 from gi.repository import GObject
-import cairo
 import logging
-import rsvg
+from gi.repository import Rsvg
 
 from sugar3.graphics import style
 
@@ -99,7 +100,7 @@ class MapNavView(Gtk.DrawingArea):
             return False
 
         x, y = self.x, self.y
-        info_walls = self.get_information_walls(x, y, self.direction)
+        #info_walls = self.get_information_walls(x, y, self.direction)
 
         new_x, new_y, new_direction = self.x, self.y, self.direction
         if keyname == 'Up' or keyname == 'KP_Up':
@@ -380,7 +381,7 @@ class MapNavView(Gtk.DrawingArea):
                     # create a new dict to add the svg handle
                     # can't be in the model because can't be put in the json
                     if not 'svg_image_cache' in wall_object:
-                        svg = rsvg.Handle(file=image_file_name)
+                        svg = Rsvg.Handle.new_from_file(image_file_name)
                         new_dict['svg_image_cache'] = svg
                 else:
                     if not 'pxb_image_cache' in wall_object:

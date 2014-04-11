@@ -16,10 +16,11 @@
 from gettext import gettext as _
 import os
 import random
-import logging
 
 from gi.repository import GObject
 from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
 from gi.repository import WebKit
 
 from sugar3.graphics import style
@@ -37,7 +38,6 @@ class _DialogWindow(Gtk.Window):
         super(_DialogWindow, self).__init__()
 
         self.set_border_width(style.LINE_WIDTH)
-        offset = style.GRID_CELL_SIZE
         width = Gdk.Screen.width() - style.GRID_CELL_SIZE * 2
         height = Gdk.Screen.height() - style.GRID_CELL_SIZE * 2
         self.set_size_request(width, height)
@@ -129,7 +129,7 @@ class ResourceDialog(_DialogWindow):
         vbox.pack_start(image, False, padding=5)
         image.set_from_file(resource['file_image'])
 
-        editor = webkit.WebView()
+        editor = WebKit.WebView()
         editor.set_editable(False)
         height = int(Gdk.Screen.height() / 3)
         editor.set_size_request(-1, height)

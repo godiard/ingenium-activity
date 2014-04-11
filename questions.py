@@ -1,11 +1,11 @@
 from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
 from gi.repository import GObject
 import logging
 import os
 import shutil
 import cairo
-
-from gobject import SIGNAL_RUN_FIRST
 
 from gettext import gettext as _
 
@@ -143,7 +143,7 @@ class DrawReplyArea(Gtk.DrawingArea):
 class PrepareQuestionsWin(Gtk.HBox):
 
     __gsignals__ = {
-        'question_updated': (SIGNAL_RUN_FIRST, None, [])
+        'question_updated': (GObject.SignalFlags.RUN_FIRST, None, [])
     }
 
     def __init__(self, activity):

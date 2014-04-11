@@ -1,10 +1,6 @@
-import logging
-
 from gi.repository import Gtk
-from gi.repository import Gdk
-from gi.repository import GObject
 import cairo
-import rsvg
+from gi.repository import Rsvg
 
 
 class Sprite(object):
@@ -21,7 +17,7 @@ class Sprite(object):
         self.load_svg()
 
     def load_svg(self):
-        self._svg = rsvg.Handle(file=self.svg_file)
+        self._svg = Rsvg.Handle.new_from_file(self.svg_file)
         self._svg_width = self._svg.props.width
 
         # create a cache with the image rendered

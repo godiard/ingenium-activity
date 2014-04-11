@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 import simplejson
 from sugar3.activity import activity

@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import os
-import csv
 import math
 import simplejson as json
 

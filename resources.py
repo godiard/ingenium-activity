@@ -1,4 +1,6 @@
 from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
 from gi.repository import GObject
 from gi.repository import WebKit
 import logging
@@ -7,17 +9,14 @@ import shutil
 
 from gettext import gettext as _
 
-from gobject import SIGNAL_RUN_FIRST
-
 from sugar3.activity import activity
-from sugar3.graphics.icon import Icon
 from sugar3.graphics.objectchooser import ObjectChooser
 
 
 class CollectResourcesWin(Gtk.HBox):
 
     __gsignals__ = {
-        'resource_updated': (SIGNAL_RUN_FIRST, None, [])
+        'resource_updated': (GObject.SignalFlags.RUN_FIRST, None, [])
     }
 
     def __init__(self, activity):
@@ -110,7 +109,7 @@ class CollectResourcesWin(Gtk.HBox):
         vbox_image.pack_start(scrolled, True, padding=5)
 
         #hbox_editor = Gtk.HBox()
-        self.editor = webkit.WebView()
+        self.editor = WebKit.WebView()
         self.title_entry.connect('changed',
                 self.__information_changed_cb)
         self.editor.set_editable(True)
