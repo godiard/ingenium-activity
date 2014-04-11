@@ -2,6 +2,7 @@ from gi.repository import Gtk
 import cairo
 from gi.repository import Rsvg
 
+from sugar3.graphics import style
 
 class Sprite(object):
     def __init__(self, svg_file, cel_width, cel_height, animation_data):
@@ -114,6 +115,9 @@ class Character(object):
         self.sprite.draw(context, dx, dy)
         context.restore()
 
+def draw(dr, ctx, character):
+    character.draw(ctx)
+
 
 def main():
     def _destroy_cb(widget, data=None):
@@ -122,11 +126,12 @@ def main():
     window = Gtk.Window()
     window.resize(600, 160)
     window.connect("destroy", _destroy_cb)
-    window.show()
-
-    draw = Character()
-    window.add(draw)
-    draw.show()
+    dr = Gtk.DrawingArea()
+    character = Character(dr)
+    character.pos = [style.GRID_CELL_SIZE, 140]
+    dr.connect('draw', draw, character)
+    window.add(dr)
+    window.show_all()
 
     Gtk.main()
 
