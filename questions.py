@@ -61,7 +61,7 @@ class DrawReplyArea(Gtk.DrawingArea):
     def setup(self):
         """Configure the Area object."""
         logging.debug('Area.setup: w=%s h=%s' % (self._width, self._height))
-        win = self.window
+        win = self.get_window()
         self.background = Gdk.Pixmap(win, self._width, self._height, -1)
         self.gc = win.new_gc()
         self.pixbuf.render_to_drawable(self.background, self.gc, 0, 0, 0, 0,
@@ -75,14 +75,13 @@ class DrawReplyArea(Gtk.DrawingArea):
         if self.background is None:
             self.setup()
         x, y, width, height = ctx.clip_extents()
-        widget.window.draw_drawable(widget.get_style().fg_gc[Gtk.StateType.NORMAL],
+        widget.get_window().draw_drawable(widget.get_style().fg_gc[Gtk.StateType.NORMAL],
                                 self.background, x, y, x, y, width, height)
         if self._edit:
-            cr = widget.window.cairo_create()
-            cr.rectangle(x, y, width, height)
-            cr.clip()
-            cr.set_source_surface(self.reply_surface)
-            cr.paint()
+            ctx.rectangle(x, y, width, height)
+            ctx.clip()
+            ctx.set_source_surface(self.reply_surface)
+            ctx.paint()
 
         return False
 

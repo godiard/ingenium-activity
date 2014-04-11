@@ -286,14 +286,14 @@ class MapNavView(Gtk.DrawingArea):
             info_walls = self.get_information_walls(self.x, self.y,
                     self.direction)
             if self._check_over_door(info_walls, event.x, event.y):
-                self.window.set_cursor(Gdk.Cursor.new(Gdk.SB_UP_ARROW))
+                self.get_window().set_cursor(Gdk.Cursor.new(Gdk.SB_UP_ARROW))
             # verify lateral walls
             elif self._check_left_wall(event.x):
-                self.window.set_cursor(Gdk.Cursor.new(Gdk.SB_LEFT_ARROW))
+                self.get_window().set_cursor(Gdk.Cursor.new(Gdk.SB_LEFT_ARROW))
             elif self._check_right_wall(event.x):
-                self.window.set_cursor(Gdk.Cursor.new(Gdk.SB_RIGHT_ARROW))
+                self.get_window().set_cursor(Gdk.Cursor.new(Gdk.SB_RIGHT_ARROW))
             else:
-                self.window.set_cursor(None)
+                self.get_window().set_cursor(None)
 
     def __button_release_event_cb(self, widget, event):
         if self.selected is not None:
@@ -333,7 +333,6 @@ class MapNavView(Gtk.DrawingArea):
         self._door_height = 6
 
     def __draw_cb(self, widget, ctx):
-        ctx = widget.window.cairo_create()
         rect = self.get_allocation()
         # set a clip region for the expose event
         #ctx.rectangle(event.area.x, event.area.y, event.area.width,

@@ -64,7 +64,7 @@ class _DialogWindow(Gtk.Window):
 
     def _realize_cb(self, source):
         self.set_type_hint(Gdk.WindowTypeHint.DIALOG)
-        self.window.set_accept_focus(True)
+        self.get_window().set_accept_focus(True)
 
 
 class _DialogToolbar(Gtk.Toolbar):
@@ -206,7 +206,7 @@ class QuestionDialog(_DialogWindow):
 
     def _change_page(self):
         self.notebook.set_current_page(1)
-        self.window.set_cursor(None)
+        self.get_window().set_cursor(None)
         # wait 3 seconds
         #report and close
         GObject.timeout_add_seconds(3, self._close_all)
@@ -216,7 +216,7 @@ class QuestionDialog(_DialogWindow):
 
     def _show_reply_feedback(self, valid_reply):
         # load smiley image
-        self.window.set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))
+        self.get_window().set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))
         if valid_reply:
             smiley = random.choice(questions.SMILIES_OK)
         else:
