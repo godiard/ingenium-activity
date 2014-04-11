@@ -3,6 +3,7 @@ import logging
 import os
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import GObject
 
@@ -30,6 +31,7 @@ class EditMapWin(Gtk.HBox):
         left_vbox = Gtk.VBox()
         self.nav_view = MapNavView(self.game_map, self.model,
                 mode=MapNavView.MODE_EDIT)
+        self.nav_view.set_size_request(Gdk.Screen.width() / 5 * 4, -1)
         self.top_view = TopMapView(self.game_map, 150, 150)
         self.top_view.show_position(self.nav_view.x, self.nav_view.y,
                 self.nav_view.direction)
@@ -37,7 +39,7 @@ class EditMapWin(Gtk.HBox):
                 self.top_view)
 
         name_box = Gtk.HBox()
-        name_box.pack_start(Gtk.Label(_('Room name', True, True, 0)), False, False, padding=5)
+        name_box.pack_start(Gtk.Label(_('Room name')), False, False, padding=5)
         self.room_name_entry = Gtk.Entry()
         self.room_name_entry.connect('focus-in-event', self.__room_name_in_cb)
         self.room_name_entry.connect('focus-out-event',
@@ -47,13 +49,13 @@ class EditMapWin(Gtk.HBox):
         name_box.pack_start(self.room_name_entry, True, True, padding=5)
 
         left_vbox.pack_start(name_box, False, False, padding=5)
-        left_vbox.pack_start(self.nav_view, True, True)
+        left_vbox.pack_start(self.nav_view, True, True, 0)
 
-        self.pack_start(left_vbox, True, True)
+        self.pack_start(left_vbox, True, True, 0)
         rigth_vbox = Gtk.VBox()
-        rigth_vbox.pack_start(self.top_view, False, False)
+        rigth_vbox.pack_start(self.top_view, False, False, 0)
         notebook = Gtk.Notebook()
-        rigth_vbox.pack_start(notebook, True, True)
+        rigth_vbox.pack_start(notebook, True, True, 0)
 
         # resources
         # store: title, pxb, image_file_name, id_resource/id_question, type
@@ -87,7 +89,7 @@ class EditMapWin(Gtk.HBox):
         scrolled2.add_with_viewport(self.furniture_iconview)
         notebook.append_page(scrolled2, Gtk.Label(label=_('Furniture')))
 
-        self.pack_start(rigth_vbox, False, False)
+        self.pack_start(rigth_vbox, False, False, 0)
         self.nav_view.grab_focus()
 
         # init room name
