@@ -12,6 +12,7 @@ from gettext import gettext as _
 from sugar3.activity import activity
 from sugar3.graphics.icon import Icon
 from sugar3.graphics.objectchooser import ObjectChooser
+from sugar3.graphics.objectchooser import FILTER_TYPE_GENERIC_MIME
 
 SMILIES_OK = ['cool', 'grin', 'nerd', 'smile', 'wink']
 SMILIES_WRONG = ['sad', 'sick', 'weep']
@@ -61,11 +62,11 @@ class DrawReplyArea(Gtk.DrawingArea):
     def setup(self):
         """Configure the Area object."""
         logging.debug('Area.setup: w=%s h=%s' % (self._width, self._height))
-        win = self.get_window()
-        self.background = Gdk.Pixmap(win, self._width, self._height, -1)
-        self.gc = win.new_gc()
-        self.pixbuf.render_to_drawable(self.background, self.gc, 0, 0, 0, 0,
-                self._width, self._height, Gdk.RGB_DITHER_NONE, 0, 0)
+        self.background = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                             self._width, self._height)
+        self.ctx = cairo.Context(self.background)
+        Gdk.cairo_set_source_pixbuf(self.ctx, self.pixbuf, 0, 0)
+        self.ctx.paint()
         self.set_size_request(self._width, self._height)
 
         return True
@@ -75,8 +76,12 @@ class DrawReplyArea(Gtk.DrawingArea):
         if self.background is None:
             self.setup()
         x, y, width, height = ctx.clip_extents()
-        widget.get_window().draw_drawable(widget.get_style().fg_gc[Gtk.StateType.NORMAL],
-                                self.background, x, y, x, y, width, height)
+        ctx.rectangle(x, y, width, height)
+        ctx.clip()
+        ctx.set_source_surface(self.background)
+        ctx.paint()
+        #widget.get_window().draw_drawable(widget.get_style().fg_gc[Gtk.StateType.NORMAL],
+        #                        self.background, x, y, x, y, width, height)
         if self._edit:
             ctx.rectangle(x, y, width, height)
             ctx.clip()
@@ -228,7 +233,7 @@ class PrepareQuestionsWin(Gtk.HBox):
         self.scrollwin = Gtk.ScrolledWindow()
         self.scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.draw_reply_area = None
-        vbox_graph_replies.pack_start(self.scrollwin, True, False, padding=5)
+        vbox_graph_replies.pack_start(self.scrollwin, True, True, padding=5)
 
         help_text = _('After select a image, paint the area where ' +
                 'is replied')
@@ -239,14 +244,10 @@ class PrepareQuestionsWin(Gtk.HBox):
         self._selected_key = self.model.get_new_question_id()
 
     def __load_image_cb(self, button):
-        try:
-            chooser = ObjectChooser(_('Choose image'),
-                self._activity, Gtk.DialogFlags.MODAL |
-                Gtk.DialogFlags.DESTROY_WITH_PARENT, what_filter='Image')
-        except:
-            chooser = ObjectChooser(_('Choose image'),
-                self._activity, Gtk.DialogFlags.MODAL |
-                Gtk.DialogFlags.DESTROY_WITH_PARENT)
+        chooser = ObjectChooser(self._activity,
+                                what_filter='Image',
+                                filter_type=FILTER_TYPE_GENERIC_MIME,
+                                show_preview=True)
         try:
             result = chooser.run()
             if result == Gtk.ResponseType.ACCEPT:
@@ -284,7 +285,7 @@ class PrepareQuestionsWin(Gtk.HBox):
         for question in self.model.data['questions']:
             logging.error('adding question %s', question)
             self.treemodel.append([question['question'],
-                    question['id_question']])
+                    str(question['id_question'])])
 
     def __add_reply_cb(self, button):
         self._add_reply_entry(reply_ok=len(self.replies_entries) == 0)
@@ -356,7 +357,7 @@ class PrepareQuestionsWin(Gtk.HBox):
 
         if new_entry:
             self.model.data['questions'].append(question)
-            self.treemodel.append([self.question_entry.get_text(), key])
+            self.treemodel.append([self.question_entry.get_text(), str(key)])
         self._modified_data = False
 
     def _display_model(self, key):
