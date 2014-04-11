@@ -163,10 +163,10 @@ class QuestionDialog(_DialogWindow):
         self.notebook = Gtk.Notebook()
         self.notebook.set_show_tabs(False)
         # add a page with the controls to reply the question
-        self.notebook.append_page(scrollwin)
+        self.notebook.append_page(scrollwin, None)
         # ... and another to show the smiley according to the result
         self.image_result = Gtk.Image()
-        self.notebook.append_page(self.image_result)
+        self.notebook.append_page(self.image_result, None)
 
         self.content_vbox.pack_start(self.notebook, True, True)
         self.content_vbox.set_border_width(0)

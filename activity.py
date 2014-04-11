@@ -130,7 +130,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self.set_canvas(self.main_notebook)
 
         if handle.object_id is None:
-            self.main_notebook.append_page(self.create_play_view())
+            self.main_notebook.append_page(self.create_play_view(), None)
 
     def create_play_view(self):
         if not 'map_data' in self.model.data or \
@@ -205,7 +205,7 @@ class IngeniumMachinaActivity(activity.Activity):
         if self.prepare_questions_win is None:
             self.prepare_questions_win = PrepareQuestionsWin(self)
             button.page = self.main_notebook.get_n_pages()
-            self.main_notebook.append_page(self.prepare_questions_win)
+            self.main_notebook.append_page(self.prepare_questions_win, None)
             self.prepare_questions_win.connect('question_updated',
                     self.__question_updated_cb)
         self.main_notebook.set_current_page(button.page)
@@ -215,7 +215,7 @@ class IngeniumMachinaActivity(activity.Activity):
         if self.collect_resources_win is None:
             self.collect_resources_win = CollectResourcesWin(self)
             button.page = self.main_notebook.get_n_pages()
-            self.main_notebook.append_page(self.collect_resources_win)
+            self.main_notebook.append_page(self.collect_resources_win, None)
             # connect signal to know if the resources are updated
             self.collect_resources_win.connect('resource_updated',
                     self.__resources_updated_cb)
@@ -236,7 +236,7 @@ class IngeniumMachinaActivity(activity.Activity):
         if self.edit_map_win is None:
             self.edit_map_win = EditMapWin(self.model)
             button.page = self.main_notebook.get_n_pages()
-            self.main_notebook.append_page(self.edit_map_win)
+            self.main_notebook.append_page(self.edit_map_win, None)
 
             # Try connect with the playing map
             logging.error('Connecting signal map-updated')
@@ -251,7 +251,7 @@ class IngeniumMachinaActivity(activity.Activity):
             self.edit_descriptions_win = Gtk.HBox()
 
             button.page = self.main_notebook.get_n_pages()
-            self.main_notebook.append_page(self.edit_descriptions_win)
+            self.main_notebook.append_page(self.edit_descriptions_win, None)
             # connect signal to know if the resources are updated
 
         self.main_notebook.set_current_page(button.page)
@@ -280,7 +280,7 @@ class IngeniumMachinaActivity(activity.Activity):
         '''Read file from Sugar Journal.'''
         logging.error('READING FILE %s', file_path)
         self.model.read(file_path)
-        self.main_notebook.append_page(self.create_play_view())
+        self.main_notebook.append_page(self.create_play_view(), None)
 
     def write_file(self, file_path):
         '''Save file on Sugar Journal. '''
