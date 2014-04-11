@@ -56,6 +56,7 @@ class GameModel:
             self.data['state']['replied_questions'].append(id_question)
 
     def get_resource(self, id_resource):
+        id_resource = int(id_resource)
         for resource in self.data['resources']:
             if resource['id_resource'] == int(id_resource):
                 return resource

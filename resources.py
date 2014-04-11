@@ -11,7 +11,7 @@ from gettext import gettext as _
 
 from sugar3.activity import activity
 from sugar3.graphics.objectchooser import ObjectChooser
-
+from sugar3.graphics.objectchooser import FILTER_TYPE_GENERIC_MIME
 
 class CollectResourcesWin(Gtk.HBox):
 
@@ -39,7 +39,7 @@ class CollectResourcesWin(Gtk.HBox):
         """
         # Listview
         self.resource_listview = Gtk.TreeView()
-        width = int(Gdk.Screen.width() / 3)
+        width = int(Gdk.Screen.width() / 4)
         self.resource_listview.set_size_request(width, -1)
 
         self.resource_listview.connect('cursor-changed', self.select_resource)
@@ -57,41 +57,42 @@ class CollectResourcesWin(Gtk.HBox):
         self.tree_scroller.set_policy(Gtk.PolicyType.NEVER,
                 Gtk.PolicyType.AUTOMATIC)
         self.tree_scroller.add(self.resource_listview)
-        self.pack_start(self.tree_scroller, False)
+        self.pack_start(self.tree_scroller, False, True, 0)
 
         vbox = Gtk.VBox()
-        self.pack_start(vbox, True)
+        self.pack_start(vbox, True, True, 0)
 
         hbox_title = Gtk.HBox()
-        hbox_title.pack_start(Gtk.Label(_('Title', True, True, 0)), False, padding=5)
+        hbox_title.pack_start(Gtk.Label(_('Title')), False, True, padding=5)
         self.title_entry = Gtk.Entry()
         self.title_entry.connect('changed', self.__information_changed_cb)
-        hbox_title.pack_start(self.title_entry, True, padding=5)
-        vbox.pack_start(hbox_title, False, padding=5)
+        hbox_title.pack_start(self.title_entry, True, True, padding=5)
+        vbox.pack_start(hbox_title, False, True, padding=5)
 
         hbox_image = Gtk.HBox()
         scrollwin = Gtk.ScrolledWindow()
         scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.image = Gtk.Image()
         scrollwin.add_with_viewport(self.image)
-        hbox_image.pack_start(scrollwin, True, padding=5)
+        scrollwin.set_size_request(Gdk.Screen.width() / 2, -1)
+        hbox_image.pack_start(scrollwin, True, True, padding=5)
         vbox_image = Gtk.VBox()
         self.load_image_button = Gtk.Button(_('Load Image'))
         self.load_image_button.connect('clicked', self.__load_image_cb)
-        vbox_image.pack_start(self.load_image_button, False, padding=5)
+        vbox_image.pack_start(self.load_image_button, False, False, padding=5)
 
         size_label = Gtk.Label(label=_('Image size:'))
-        vbox_image.pack_start(size_label, False, padding=5)
+        vbox_image.pack_start(size_label, False, False, padding=5)
         self.size_label_value = Gtk.Label(label='')
-        vbox_image.pack_start(self.size_label_value, False, padding=5)
-        hbox_image.pack_start(vbox_image, False, padding=5)
-        vbox.pack_start(hbox_image, True, padding=5)
+        vbox_image.pack_start(self.size_label_value, False, False, padding=5)
+        hbox_image.pack_start(vbox_image, False, False, padding=5)
+        vbox.pack_start(hbox_image, True, True, padding=5)
 
         # show as icon
         self.show_as_icon_check = Gtk.CheckButton()
         self._set_show_as_icon_label()
         self.show_as_icon_check.connect('toggled', self.__show_as_toggled_cb)
-        vbox_image.pack_start(self.show_as_icon_check, False, padding=5)
+        vbox_image.pack_start(self.show_as_icon_check, False, False, padding=5)
 
         self._icons_store = Gtk.ListStore(str, GdkPixbuf.Pixbuf, str)
         self._icons_store.set_sort_column_id(0, Gtk.SortType.ASCENDING)
@@ -100,13 +101,14 @@ class CollectResourcesWin(Gtk.HBox):
         self._iconview.set_pixbuf_column(1)
         self._iconview.set_sensitive(False)
         self._iconview.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        #self._iconview.set_size_request(Gdk.Screen.width() / 5, -1)
         self.load_icons()
         self._iconview.connect('item-activated', self.__iconview_activated_cb)
         scrolled = Gtk.ScrolledWindow()
-        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrolled.add_with_viewport(self._iconview)
-
-        vbox_image.pack_start(scrolled, True, padding=5)
+        #scrolled.set_size_request(Gdk.Screen.width() / 5, -1)
+        vbox_image.pack_start(scrolled, True, True, padding=5)
 
         #hbox_editor = Gtk.HBox()
         self.editor = WebKit.WebView()
@@ -115,8 +117,8 @@ class CollectResourcesWin(Gtk.HBox):
         self.editor.set_editable(True)
         height = int(Gdk.Screen.height() / 3)
         self.editor.set_size_request(-1, height)
-        #hbox_editor.pack_start(self.editor, False, padding=5)
-        vbox.pack_start(self.editor, False, padding=5)
+        #hbox_editor.pack_start(self.editor, False, True, padding=5)
+        vbox.pack_start(self.editor, False, True, padding=5)
 
         self._load_treemodel()
         self.show_all()
@@ -159,14 +161,9 @@ class CollectResourcesWin(Gtk.HBox):
                 self._icons_store.append(['', pxb, image_file_name])
 
     def __load_image_cb(self, button):
-        try:
-            chooser = ObjectChooser(_('Choose image'),
-                self._activity, Gtk.DialogFlags.MODAL |
-                Gtk.DialogFlags.DESTROY_WITH_PARENT, what_filter='Image')
-        except:
-            chooser = ObjectChooser(_('Choose image'),
-                self._activity, Gtk.DialogFlags.MODAL |
-                Gtk.DialogFlags.DESTROY_WITH_PARENT)
+        chooser = ObjectChooser(self._activity, what_filter='Image',
+                                filter_type=FILTER_TYPE_GENERIC_MIME,
+                                show_preview=True)
         try:
             result = chooser.run()
             if result == Gtk.ResponseType.ACCEPT:
@@ -203,7 +200,11 @@ class CollectResourcesWin(Gtk.HBox):
             self.treemodel.append([resource['title'], resource['id_resource']])
 
     def select_resource(self, treeview):
+        if treeview.get_selection() is None:
+            return
         treestore, coldex = treeview.get_selection().get_selected()
+        if coldex is None:
+            return
         logging.debug('selected resource %s', treestore.get_value(coldex, 1))
         if self._modified_data:
             # update data
@@ -212,11 +213,13 @@ class CollectResourcesWin(Gtk.HBox):
         self._display_model(self._selected_key)
 
     def _update_model(self, key):
+        logging.error('_update model key %s class %s', key, key.__class__)
         resource = self.model.get_resource(key)
         new_entry = False
         if resource == None:
             resource = {}
             new_entry = True
+        logging.error('_update_model new entry %s', new_entry)
         # save text with the same name as the image and extension .html
         with open(self._image_resource_path + '.html', 'w') as html_file:
             html_file.write(self._get_html())
@@ -235,7 +238,7 @@ class CollectResourcesWin(Gtk.HBox):
 
         if new_entry:
             self.model.data['resources'].append(resource)
-            self.treemodel.append([self.title_entry.get_text(), key])
+            self.treemodel.append([self.title_entry.get_text(), str(key)])
 
         self._modified_data = False
 
@@ -245,6 +248,8 @@ class CollectResourcesWin(Gtk.HBox):
         return self.editor.get_main_frame().get_title()
 
     def _display_model(self, key):
+        key = str(key)
+        # logging.error('model %s', self.model.data)
         resource = self.model.get_resource(key)
         self._display_resource(resource)
 
@@ -291,6 +296,7 @@ class CollectResourcesWin(Gtk.HBox):
     def add_resource(self):
         if self._modified_data:
             # update data
+            logging.error('update data (add resource modified data)')
             self._update_model(self._selected_key)
 
         self._selected_key = self.model.get_new_resource_id()
