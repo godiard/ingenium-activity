@@ -79,7 +79,6 @@ class MapNavView(Gtk.DrawingArea):
                 character_y = allocation.height - self._grid_size
                 self._character.pos = [style.GRID_CELL_SIZE, character_y]
                 self._character.direction = 1
-                self._character.change_animation('stand', flip_x=1)
             self.disconnect(self._setup_handle)
 
         self._setup_handle = self.connect('size_allocate',
