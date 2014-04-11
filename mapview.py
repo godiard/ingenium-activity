@@ -5,7 +5,7 @@
 #
 # The class TopMapView draw a map from the top
 
-import gtk
+from gi.repository import Gtk
 import cairo
 from game_map import GameMap
 
@@ -112,7 +112,7 @@ def draw(ctx, game_map, view_data):
         ctx.fill()
 
 
-class TopMapView(gtk.DrawingArea):
+class TopMapView(Gtk.DrawingArea):
 
     def __init__(self, game_map, width, height):
         self._game_map = game_map
@@ -148,14 +148,14 @@ class TopMapView(gtk.DrawingArea):
 
 
 def main():
-    window = gtk.Window()
+    window = Gtk.Window()
     game_map = GameMap()
     map_view = TopMapView(game_map, 200, 200)
 
     window.add(map_view)
-    window.connect("destroy", gtk.main_quit)
+    window.connect("destroy", Gtk.main_quit)
     window.show_all()
-    gtk.main()
+    Gtk.main()
 
 if __name__ == "__main__":
     main()

@@ -6,7 +6,7 @@
 # The class StateView draw how many questions there are in the game,
 # how many have been read, and how many have been replied.
 
-import gtk
+from gi.repository import Gtk
 import cairo
 import rsvg
 import model
@@ -73,10 +73,10 @@ class StateView():
 
 
 def main():
-    window = gtk.Window()
+    window = Gtk.Window()
     _model = model.GameModel()
     state_view = StateView(_model, 10, 10, 20)
-    area = gtk.DrawingArea()
+    area = Gtk.DrawingArea()
 
     # add fake questions to test
     _model.data['questions'].append('')
@@ -97,9 +97,9 @@ def main():
     area.connect('expose_event', expose, state_view)
 
     window.add(area)
-    window.connect("destroy", gtk.main_quit)
+    window.connect("destroy", Gtk.main_quit)
     window.show_all()
-    gtk.main()
+    Gtk.main()
 
 if __name__ == "__main__":
     main()

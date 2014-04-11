@@ -18,18 +18,18 @@ import os
 import random
 import logging
 
-import gobject
-import gtk
-import webkit
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import WebKit
 
-from sugar.graphics import style
-from sugar.graphics.toolbutton import ToolButton
-from sugar.graphics.icon import Icon
+from sugar3.graphics import style
+from sugar3.graphics.toolbutton import ToolButton
+from sugar3.graphics.icon import Icon
 
 import questions
 
 
-class _DialogWindow(gtk.Window):
+class _DialogWindow(Gtk.Window):
 
     # A base class for a modal dialog window.
 
@@ -38,22 +38,22 @@ class _DialogWindow(gtk.Window):
 
         self.set_border_width(style.LINE_WIDTH)
         offset = style.GRID_CELL_SIZE
-        width = gtk.gdk.screen_width() - style.GRID_CELL_SIZE * 2
-        height = gtk.gdk.screen_height() - style.GRID_CELL_SIZE * 2
+        width = Gdk.Screen.width() - style.GRID_CELL_SIZE * 2
+        height = Gdk.Screen.height() - style.GRID_CELL_SIZE * 2
         self.set_size_request(width, height)
-        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+        self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
         self.set_decorated(False)
         self.set_resizable(False)
         self.set_modal(True)
 
-        vbox = gtk.VBox()
+        vbox = Gtk.VBox()
         self.add(vbox)
 
         toolbar = _DialogToolbar(icon_name, title)
         toolbar.connect('stop-clicked', self._stop_clicked_cb)
         vbox.pack_start(toolbar, False)
 
-        self.content_vbox = gtk.VBox()
+        self.content_vbox = Gtk.VBox()
         self.content_vbox.set_border_width(style.DEFAULT_SPACING)
         vbox.add(self.content_vbox)
 
@@ -63,16 +63,16 @@ class _DialogWindow(gtk.Window):
         self.destroy()
 
     def _realize_cb(self, source):
-        self.window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
+        self.set_type_hint(Gdk.WindowTypeHint.DIALOG)
         self.window.set_accept_focus(True)
 
 
-class _DialogToolbar(gtk.Toolbar):
+class _DialogToolbar(Gtk.Toolbar):
 
     # Displays a dialog window's toolbar, with title, icon, and close box.
 
     __gsignals__ = {
-        'stop-clicked': (gobject.SIGNAL_RUN_LAST, None, ()),
+        'stop-clicked': (GObject.SignalFlags.RUN_LAST, None, ()),
     }
 
     def __init__(self, icon_name, title):
@@ -80,12 +80,12 @@ class _DialogToolbar(gtk.Toolbar):
 
         if icon_name is not None:
             icon = Icon()
-            icon.set_from_icon_name(icon_name, gtk.ICON_SIZE_LARGE_TOOLBAR)
+            icon.set_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
             self._add_widget(icon)
 
         self._add_separator()
 
-        label = gtk.Label(title)
+        label = Gtk.Label(label=title)
         self._add_widget(label)
 
         self._add_separator(expand=True)
@@ -96,13 +96,13 @@ class _DialogToolbar(gtk.Toolbar):
         self.add(stop)
 
     def _add_separator(self, expand=False):
-        separator = gtk.SeparatorToolItem()
+        separator = Gtk.SeparatorToolItem()
         separator.set_expand(expand)
         separator.set_draw(False)
         self.add(separator)
 
     def _add_widget(self, widget):
-        tool_item = gtk.ToolItem()
+        tool_item = Gtk.ToolItem()
         tool_item.add(widget)
         self.add(tool_item)
 
@@ -119,19 +119,19 @@ class ResourceDialog(_DialogWindow):
 
         super(ResourceDialog, self).__init__(None, resource['title'])
 
-        scrollwin = gtk.ScrolledWindow()
-        scrollwin.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-        self.content_vbox.pack_start(scrollwin)
-        vbox = gtk.VBox()
+        scrollwin = Gtk.ScrolledWindow()
+        scrollwin.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.content_vbox.pack_start(scrollwin, True, True, 0)
+        vbox = Gtk.VBox()
         scrollwin.add_with_viewport(vbox)
 
-        image = gtk.Image()
+        image = Gtk.Image()
         vbox.pack_start(image, False, padding=5)
         image.set_from_file(resource['file_image'])
 
         editor = webkit.WebView()
         editor.set_editable(False)
-        height = int(gtk.gdk.screen_height() / 3)
+        height = int(Gdk.Screen.height() / 3)
         editor.set_size_request(-1, height)
         vbox.pack_start(editor, False, padding=5)
 
@@ -146,8 +146,8 @@ class QuestionDialog(_DialogWindow):
     __gtype_name__ = 'QuestionDialog'
 
     __gsignals__ = {
-        'reply-selected': (gobject.SIGNAL_RUN_LAST, None,
-                ([gobject.TYPE_STRING, gobject.TYPE_BOOLEAN])),
+        'reply-selected': (GObject.SignalFlags.RUN_LAST, None,
+                ([GObject.TYPE_STRING, GObject.TYPE_BOOLEAN])),
     }
 
     def __init__(self, model, id_question):
@@ -155,17 +155,17 @@ class QuestionDialog(_DialogWindow):
         question = model.get_question(id_question)
         super(QuestionDialog, self).__init__(None, question['question'])
 
-        scrollwin = gtk.ScrolledWindow()
-        scrollwin.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-        vbox = gtk.VBox()
+        scrollwin = Gtk.ScrolledWindow()
+        scrollwin.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        vbox = Gtk.VBox()
         scrollwin.add_with_viewport(vbox)
 
-        self.notebook = gtk.Notebook()
+        self.notebook = Gtk.Notebook()
         self.notebook.set_show_tabs(False)
         # add a page with the controls to reply the question
         self.notebook.append_page(scrollwin)
         # ... and another to show the smiley according to the result
-        self.image_result = gtk.Image()
+        self.image_result = Gtk.Image()
         self.notebook.append_page(self.image_result)
 
         self.content_vbox.pack_start(self.notebook, True, True)
@@ -178,11 +178,11 @@ class QuestionDialog(_DialogWindow):
             replies.extend(question['replies'])
             random.shuffle(replies)
             for reply in replies:
-                hbox_row = gtk.HBox()
-                reply_label = gtk.Label(reply['text'])
+                hbox_row = Gtk.HBox()
+                reply_label = Gtk.Label(label=reply['text'])
                 hbox_row.pack_start(reply_label, True, padding=5)
                 vbox.pack_start(hbox_row, False, padding=5)
-                reply_button = gtk.Button(_('Select'))
+                reply_button = Gtk.Button(_('Select'))
                 reply_button.connect('clicked', self.__button_reply_click_cb,
                         reply['valid'])
                 hbox_row.pack_start(reply_button, False, padding=5)
@@ -209,25 +209,25 @@ class QuestionDialog(_DialogWindow):
         self.window.set_cursor(None)
         # wait 3 seconds
         #report and close
-        gobject.timeout_add_seconds(3, self._close_all)
+        GObject.timeout_add_seconds(3, self._close_all)
 
     def _close_all(self):
         self.destroy()
 
     def _show_reply_feedback(self, valid_reply):
         # load smiley image
-        self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.WATCH))
+        self.window.set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))
         if valid_reply:
             smiley = random.choice(questions.SMILIES_OK)
         else:
             smiley = random.choice(questions.SMILIES_WRONG)
         image_file_name = './images/smilies/%s.svg' % smiley
-        size = gtk.gdk.screen_height() / 2
-        pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, size,
+        size = Gdk.Screen.height() / 2
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(image_file_name, size,
                 size)
         self.image_result.set_from_pixbuf(pixbuf)
         # report result
         self.emit('reply-selected', self._id_question, valid_reply)
 
         # wait one second and change the page
-        gobject.timeout_add_seconds(1, self._change_page)
+        GObject.timeout_add_seconds(1, self._change_page)

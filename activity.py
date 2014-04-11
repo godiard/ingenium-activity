@@ -15,18 +15,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import gtk
+from gi.repository import Gtk
 import logging
 
 from gettext import gettext as _
 
-from sugar.activity import activity
-from sugar.graphics.toolbarbox import ToolbarBox
-from sugar.activity.widgets import ActivityToolbarButton
-from sugar.activity.widgets import StopButton
-from sugar.graphics.toolbutton import ToolButton
-from sugar.graphics.radiotoolbutton import RadioToolButton
-from sugar.graphics.toggletoolbutton import ToggleToolButton
+from sugar3.activity import activity
+from sugar3.graphics.toolbarbox import ToolbarBox
+from sugar3.activity.widgets import ActivityToolbarButton
+from sugar3.activity.widgets import StopButton
+from sugar3.graphics.toolbutton import ToolButton
+from sugar3.graphics.radiotoolbutton import RadioToolButton
+from sugar3.graphics.toggletoolbutton import ToggleToolButton
 
 from model import GameModel
 from resources import CollectResourcesWin
@@ -89,7 +89,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self._descriptions_button.connect('clicked',
                 self.__descriptions_button_cb)
 
-        self.toolbar_box.toolbar.insert(gtk.SeparatorToolItem(), -1)
+        self.toolbar_box.toolbar.insert(Gtk.SeparatorToolItem(), -1)
 
         self._add_button = ToolButton('add')
         self._add_button.connect('clicked', self.__add_cb)
@@ -99,7 +99,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self._remove_button.connect('clicked', self.__remove_cb)
         self.toolbar_box.toolbar.insert(self._remove_button, -1)
 
-        separator = gtk.SeparatorToolItem()
+        separator = Gtk.SeparatorToolItem()
         separator.props.draw = False
         separator.set_expand(True)
         self.toolbar_box.toolbar.insert(separator, -1)
@@ -122,7 +122,7 @@ class IngeniumMachinaActivity(activity.Activity):
         self.activity_mode = PLAY_MODE
         self.action = EDIT_RESOURCES_ACTION
         self.update_buttons_state()
-        self.main_notebook = gtk.Notebook()
+        self.main_notebook = Gtk.Notebook()
 
         self.main_notebook.set_show_tabs(False)
         self.main_notebook.show_all()
@@ -247,7 +247,7 @@ class IngeniumMachinaActivity(activity.Activity):
 
     def __descriptions_button_cb(self, button):
         if self.edit_descriptions_win is None:
-            self.edit_descriptions_win = gtk.HBox()
+            self.edit_descriptions_win = Gtk.HBox()
 
             button.page = self.main_notebook.get_n_pages()
             self.main_notebook.append_page(self.edit_descriptions_win)
@@ -288,9 +288,9 @@ class IngeniumMachinaActivity(activity.Activity):
         self.model.write(file_path)
 
 
-class CollectInformationWin(gtk.VBox):
+class CollectInformationWin(Gtk.VBox):
 
     def __init__(self):
-        gtk.VBox.__init__(self)
-        self.introduction = gtk.Label(_('Edit your Adventure Game in 4 steps'))
+        GObject.GObject.__init__(self)
+        self.introduction = Gtk.Label(label=_('Edit your Adventure Game in 4 steps'))
         self.pack_start(self.introduction, False)

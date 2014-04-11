@@ -1,5 +1,5 @@
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 import logging
 import os
 import shutil
@@ -9,25 +9,25 @@ from gobject import SIGNAL_RUN_FIRST
 
 from gettext import gettext as _
 
-from sugar.activity import activity
-from sugar.graphics.icon import Icon
-from sugar.graphics.objectchooser import ObjectChooser
+from sugar3.activity import activity
+from sugar3.graphics.icon import Icon
+from sugar3.graphics.objectchooser import ObjectChooser
 
 SMILIES_OK = ['cool', 'grin', 'nerd', 'smile', 'wink']
 SMILIES_WRONG = ['sad', 'sick', 'weep']
 
 
-class DrawReplyArea(gtk.DrawingArea):
+class DrawReplyArea(Gtk.DrawingArea):
 
     __gsignals__ = {
-        'reply-selected': (gobject.SIGNAL_RUN_LAST, None,
-                ([gobject.TYPE_BOOLEAN])),
+        'reply-selected': (GObject.SignalFlags.RUN_LAST, None,
+                ([GObject.TYPE_BOOLEAN])),
     }
 
     def __init__(self, image_file_name, reply_file_name=None, edit=False):
-        gtk.DrawingArea.__init__(self)
+        GObject.GObject.__init__(self)
         self._image_file_name = image_file_name
-        self.pixbuf = gtk.gdk.pixbuf_new_from_file(image_file_name)
+        self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(image_file_name)
         self._width = self.pixbuf.get_width()
         self._height = self.pixbuf.get_height()
         self._edit = edit
@@ -52,9 +52,9 @@ class DrawReplyArea(gtk.DrawingArea):
             else:
                 logging.error('ERROR: using in play mode without reply image')
 
-        self.set_events(gtk.gdk.EXPOSURE_MASK | gtk.gdk.LEAVE_NOTIFY_MASK
-                | gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.POINTER_MOTION_MASK
-                | gtk.gdk.POINTER_MOTION_HINT_MASK)
+        self.set_events(Gdk.EventMask.EXPOSURE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK
+                | Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.POINTER_MOTION_MASK
+                | Gdk.EventMask.POINTER_MOTION_HINT_MASK)
         self.background = None
         self.show()
 
@@ -62,10 +62,10 @@ class DrawReplyArea(gtk.DrawingArea):
         """Configure the Area object."""
         logging.debug('Area.setup: w=%s h=%s' % (self._width, self._height))
         win = self.window
-        self.background = gtk.gdk.Pixmap(win, self._width, self._height, -1)
+        self.background = Gdk.Pixmap(win, self._width, self._height, -1)
         self.gc = win.new_gc()
         self.pixbuf.render_to_drawable(self.background, self.gc, 0, 0, 0, 0,
-                self._width, self._height, gtk.gdk.RGB_DITHER_NONE, 0, 0)
+                self._width, self._height, Gdk.RGB_DITHER_NONE, 0, 0)
         self.set_size_request(self._width, self._height)
 
         return True
@@ -75,7 +75,7 @@ class DrawReplyArea(gtk.DrawingArea):
         if self.background is None:
             self.setup()
         x, y, width, height = event.area
-        widget.window.draw_drawable(widget.get_style().fg_gc[gtk.STATE_NORMAL],
+        widget.window.draw_drawable(widget.get_style().fg_gc[Gtk.StateType.NORMAL],
                                 self.background, x, y, x, y, width, height)
         if self._edit:
             cr = widget.window.cairo_create()
@@ -128,8 +128,8 @@ class DrawReplyArea(gtk.DrawingArea):
         else:
             x = event.x
             y = event.y
-            state = event.state
-        if state & gtk.gdk.BUTTON1_MASK:
+            state = event.get_state()
+        if state & Gdk.ModifierType.BUTTON1_MASK:
             self.draw_brush(widget, x, y)
         return True
 
@@ -140,14 +140,14 @@ class DrawReplyArea(gtk.DrawingArea):
         self.reply_surface = self.reply_surface.create_from_png(file_path)
 
 
-class PrepareQuestionsWin(gtk.HBox):
+class PrepareQuestionsWin(Gtk.HBox):
 
     __gsignals__ = {
         'question_updated': (SIGNAL_RUN_FIRST, None, [])
     }
 
     def __init__(self, activity):
-        gtk.HBox.__init__(self)
+        GObject.GObject.__init__(self)
         self._activity = activity
         self.model = activity.model
         # Listview
@@ -162,78 +162,78 @@ class PrepareQuestionsWin(gtk.HBox):
         """
 
         # Listview
-        self.quest_listview = gtk.TreeView()
-        width = int(gtk.gdk.screen_width() / 3)
+        self.quest_listview = Gtk.TreeView()
+        width = int(Gdk.Screen.width() / 3)
         self.quest_listview.set_size_request(width, -1)
 
         self.quest_listview.connect('cursor-changed', self.select_question)
-        self.treemodel = gtk.ListStore(gobject.TYPE_STRING,
-                gobject.TYPE_STRING)
+        self.treemodel = Gtk.ListStore(GObject.TYPE_STRING,
+                GObject.TYPE_STRING)
         self.quest_listview.set_model(self.treemodel)
-        renderer = gtk.CellRendererText()
-        renderer.set_property('wrap-mode', gtk.WRAP_WORD)
-        self.treecol = gtk.TreeViewColumn(_('Questions'), renderer, text=0)
+        renderer = Gtk.CellRendererText()
+        renderer.set_property('wrap-mode', Gtk.WrapMode.WORD)
+        self.treecol = Gtk.TreeViewColumn(_('Questions'), renderer, text=0)
         self.quest_listview.append_column(self.treecol)
-        self.tree_scroller = gtk.ScrolledWindow(hadjustment=None,
+        self.tree_scroller = Gtk.ScrolledWindow(hadjustment=None,
                 vadjustment=None)
-        self.tree_scroller.set_policy(gtk.POLICY_NEVER,
-                gtk.POLICY_AUTOMATIC)
+        self.tree_scroller.set_policy(Gtk.PolicyType.NEVER,
+                Gtk.PolicyType.AUTOMATIC)
         self.tree_scroller.add(self.quest_listview)
         self.pack_start(self.tree_scroller, False)
 
-        vbox = gtk.VBox()
+        vbox = Gtk.VBox()
         self.pack_start(vbox, True)
 
         # edit question panel
 
-        vbox.pack_start(gtk.Label(_('Question')), False, padding=5)
-        self.question_entry = gtk.Entry()
+        vbox.pack_start(Gtk.Label(_('Question', True, True, 0)), False, padding=5)
+        self.question_entry = Gtk.Entry()
         self.question_entry.connect('changed', self.__information_changed_cb)
-        hbox_row = gtk.HBox()
+        hbox_row = Gtk.HBox()
         hbox_row.pack_start(self.question_entry, True, padding=5)
         vbox.pack_start(hbox_row, False, padding=5)
 
-        self.notebook = gtk.Notebook()
+        self.notebook = Gtk.Notebook()
         vbox.pack_start(self.notebook, True)
-        self.vbox_edit = gtk.VBox()
+        self.vbox_edit = Gtk.VBox()
         self.notebook.set_show_tabs(True)
         self.questions_types = []
 
-        self.notebook.append_page(self.vbox_edit, gtk.Label(_('Text reply')))
+        self.notebook.append_page(self.vbox_edit, Gtk.Label(label=_('Text reply')))
         self.questions_types.append(self.model.QUESTION_TYPE_TEXT)
 
-        vbox_graph_replies = gtk.VBox()
+        vbox_graph_replies = Gtk.VBox()
         self.notebook.append_page(vbox_graph_replies,
-                gtk.Label(_('Graph reply')))
+                Gtk.Label(label=_('Graph reply')))
         self.questions_types.append(self.model.QUESTION_TYPE_GRAPHIC)
 
         # text reply controls
-        hbox_buttons = gtk.HBox()
-        add_reply_button = gtk.Button(_('Add reply'))
+        hbox_buttons = Gtk.HBox()
+        add_reply_button = Gtk.Button(_('Add reply'))
         add_reply_button.connect('clicked', self.__add_reply_cb)
         hbox_buttons.pack_start(add_reply_button, False, padding=5)
 
         self.vbox_edit.pack_start(hbox_buttons, False, padding=5)
 
         self.vbox_edit.replies = []  # used to remove the childs
-        self.vbox_edit.pack_start(gtk.Label(_('Replies')), False, padding=5)
+        self.vbox_edit.pack_start(Gtk.Label(_('Replies', True, True, 0)), False, padding=5)
         self.replies_entries = []
         #self._add_reply_entry()
         #self._add_reply_entry(reply_ok=False)
 
         # graph reply
-        self.load_image_button = gtk.Button(_('Load Image'))
+        self.load_image_button = Gtk.Button(_('Load Image'))
         self.load_image_button.connect('clicked', self.__load_image_cb)
         vbox_graph_replies.pack_start(self.load_image_button, False, padding=5)
 
-        self.scrollwin = gtk.ScrolledWindow()
-        self.scrollwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.scrollwin = Gtk.ScrolledWindow()
+        self.scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.draw_reply_area = None
         vbox_graph_replies.pack_start(self.scrollwin, True, padding=5)
 
         help_text = _('After select a image, paint the area where ' +
                 'is replied')
-        vbox_graph_replies.pack_start(gtk.Label(help_text), False, padding=5)
+        vbox_graph_replies.pack_start(Gtk.Label(help_text, True, True, 0), False, padding=5)
         self._load_treemodel()
         self.show_all()
         self._modified_data = False
@@ -242,15 +242,15 @@ class PrepareQuestionsWin(gtk.HBox):
     def __load_image_cb(self, button):
         try:
             chooser = ObjectChooser(_('Choose image'),
-                self._activity, gtk.DIALOG_MODAL |
-                gtk.DIALOG_DESTROY_WITH_PARENT, what_filter='Image')
+                self._activity, Gtk.DialogFlags.MODAL |
+                Gtk.DialogFlags.DESTROY_WITH_PARENT, what_filter='Image')
         except:
             chooser = ObjectChooser(_('Choose image'),
-                self._activity, gtk.DIALOG_MODAL |
-                gtk.DIALOG_DESTROY_WITH_PARENT)
+                self._activity, Gtk.DialogFlags.MODAL |
+                Gtk.DialogFlags.DESTROY_WITH_PARENT)
         try:
             result = chooser.run()
-            if result == gtk.RESPONSE_ACCEPT:
+            if result == Gtk.ResponseType.ACCEPT:
                 logging.debug('ObjectChooser: %r',
                         chooser.get_selected_object())
                 jobject = chooser.get_selected_object()
@@ -291,8 +291,8 @@ class PrepareQuestionsWin(gtk.HBox):
         self._add_reply_entry(reply_ok=len(self.replies_entries) == 0)
 
     def _add_reply_entry(self, reply_ok=True, text=None):
-        hbox_row = gtk.HBox()
-        reply_entry = gtk.Entry()
+        hbox_row = Gtk.HBox()
+        reply_entry = Gtk.Entry()
         if text is not None:
             reply_entry.set_text(text)
         reply_entry.connect('changed', self.__information_changed_cb)

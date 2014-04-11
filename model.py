@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 import simplejson
-from sugar.activity import activity
+from sugar3.activity import activity
 import zipfile
 
 

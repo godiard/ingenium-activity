@@ -1,8 +1,8 @@
 import logging
 
-import gtk
-from gtk import gdk
-import gobject
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GObject
 import cairo
 import rsvg
 
@@ -121,9 +121,9 @@ class Character(object):
 
 def main():
     def _destroy_cb(widget, data=None):
-        gtk.main_quit()
+        Gtk.main_quit()
 
-    window = gtk.Window()
+    window = Gtk.Window()
     window.resize(600, 160)
     window.connect("destroy", _destroy_cb)
     window.show()
@@ -132,7 +132,7 @@ def main():
     window.add(draw)
     draw.show()
 
-    gtk.main()
+    Gtk.main()
 
 
 if __name__ == "__main__":

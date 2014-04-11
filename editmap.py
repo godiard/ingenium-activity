@@ -2,19 +2,19 @@ from gettext import gettext as _
 import logging
 import os
 
-import gtk
+from gi.repository import Gtk
 
-from sugar.activity import activity
+from sugar3.activity import activity
 
 from game_map import GameMap
 from mapview import TopMapView
 from mapnav import MapNavView
 
 
-class EditMapWin(gtk.HBox):
+class EditMapWin(Gtk.HBox):
 
     def __init__(self, model):
-        gtk.HBox.__init__(self)
+        GObject.GObject.__init__(self)
         self.model = model
 
         if not 'map_data' in self.model.data or \
@@ -25,7 +25,7 @@ class EditMapWin(gtk.HBox):
 
         self.model.data['map_data'] = self.game_map.data
 
-        left_vbox = gtk.VBox()
+        left_vbox = Gtk.VBox()
         self.nav_view = MapNavView(self.game_map, self.model,
                 mode=MapNavView.MODE_EDIT)
         self.top_view = TopMapView(self.game_map, 150, 150)
@@ -34,9 +34,9 @@ class EditMapWin(gtk.HBox):
         self.nav_view.connect('position-changed', self.show_position,
                 self.top_view)
 
-        name_box = gtk.HBox()
-        name_box.pack_start(gtk.Label(_('Room name')), False, False, padding=5)
-        self.room_name_entry = gtk.Entry()
+        name_box = Gtk.HBox()
+        name_box.pack_start(Gtk.Label(_('Room name', True, True, 0)), False, False, padding=5)
+        self.room_name_entry = Gtk.Entry()
         self.room_name_entry.connect('focus-in-event', self.__room_name_in_cb)
         self.room_name_entry.connect('focus-out-event',
                 self.__room_name_out_cb)
@@ -48,18 +48,18 @@ class EditMapWin(gtk.HBox):
         left_vbox.pack_start(self.nav_view, True, True)
 
         self.pack_start(left_vbox, True, True)
-        rigth_vbox = gtk.VBox()
+        rigth_vbox = Gtk.VBox()
         rigth_vbox.pack_start(self.top_view, False, False)
-        notebook = gtk.Notebook()
+        notebook = Gtk.Notebook()
         rigth_vbox.pack_start(notebook, True, True)
 
         # resources
         # store: title, pxb, image_file_name, id_resource/id_question, type
         # type: question or resource
-        self._resources_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str, str,
+        self._resources_store = Gtk.ListStore(str, GdkPixbuf.Pixbuf, str, str,
                 str)
-        self._resources_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        self.resources_iconview = gtk.IconView(self._resources_store)
+        self._resources_store.set_sort_column_id(0, Gtk.SortType.ASCENDING)
+        self.resources_iconview = Gtk.IconView(self._resources_store)
         self.resources_iconview.set_text_column(0)
         self.resources_iconview.set_pixbuf_column(1)
         self.load_resources_and_questions()
@@ -67,23 +67,23 @@ class EditMapWin(gtk.HBox):
                 self.__resource_iconview_activated_cb)
 
         # furniture
-        self._furniture_store = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
-        self._furniture_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        self.furniture_iconview = gtk.IconView(self._furniture_store)
+        self._furniture_store = Gtk.ListStore(str, GdkPixbuf.Pixbuf, str)
+        self._furniture_store.set_sort_column_id(0, Gtk.SortType.ASCENDING)
+        self.furniture_iconview = Gtk.IconView(self._furniture_store)
         self.furniture_iconview.set_text_column(0)
         self.furniture_iconview.set_pixbuf_column(1)
         self.load_furniture()
         self.furniture_iconview.connect('item-activated',
                 self.__iconview_activated_cb)
 
-        scrolled1 = gtk.ScrolledWindow()
-        scrolled1.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        scrolled1 = Gtk.ScrolledWindow()
+        scrolled1.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scrolled1.add_with_viewport(self.resources_iconview)
-        notebook.append_page(scrolled1, gtk.Label(_('Resources & ?')))
-        scrolled2 = gtk.ScrolledWindow()
-        scrolled2.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        notebook.append_page(scrolled1, Gtk.Label(label=_('Resources & ?')))
+        scrolled2 = Gtk.ScrolledWindow()
+        scrolled2.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scrolled2.add_with_viewport(self.furniture_iconview)
-        notebook.append_page(scrolled2, gtk.Label(_('Furniture')))
+        notebook.append_page(scrolled2, Gtk.Label(label=_('Furniture')))
 
         self.pack_start(rigth_vbox, False, False)
         self.nav_view.grab_focus()
@@ -123,7 +123,7 @@ class EditMapWin(gtk.HBox):
             id_resource = resource['id_resource']
             logging.error('Adding %s %s %s', title, image_file_name,
                     id_resource)
-            pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, 100,
+            pxb = GdkPixbuf.Pixbuf.new_from_file_at_size(image_file_name, 100,
                     100)
             self._resources_store.append([title, pxb, image_file_name,
                     id_resource, 'resource'])
@@ -138,7 +138,7 @@ class EditMapWin(gtk.HBox):
             id_question = question['id_question']
             logging.error('Adding %s %s %s', text, image_file_name,
                     id_question)
-            pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name, 100,
+            pxb = GdkPixbuf.Pixbuf.new_from_file_at_size(image_file_name, 100,
                     100)
             self._resources_store.append([text, pxb, image_file_name,
                     id_question, 'question'])
@@ -151,7 +151,7 @@ class EditMapWin(gtk.HBox):
             if not file_name.endswith('.txt'):
                 image_file_name = os.path.join(images_path, file_name)
                 logging.error('Adding %s', image_file_name)
-                pxb = gtk.gdk.pixbuf_new_from_file_at_size(image_file_name,
+                pxb = GdkPixbuf.Pixbuf.new_from_file_at_size(image_file_name,
                         100, 100)
                 self._furniture_store.append(['', pxb, image_file_name])
 

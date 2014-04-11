@@ -5,13 +5,13 @@
 #
 # The class MapNavView draw a map from the top
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 import cairo
 import logging
 import rsvg
 
-from sugar.graphics import style
+from sugar3.graphics import style
 
 from game_map import GameMap
 from character import Character
@@ -31,20 +31,20 @@ class SelectedObject():
         pass
 
 
-class MapNavView(gtk.DrawingArea):
+class MapNavView(Gtk.DrawingArea):
 
-    __gsignals__ = {'position-changed': (gobject.SIGNAL_RUN_FIRST,
-                          gobject.TYPE_NONE,
-                          ([gobject.TYPE_INT, gobject.TYPE_INT,
-                            gobject.TYPE_STRING])),
-                    'map-updated': (gobject.SIGNAL_RUN_FIRST,
-                          gobject.TYPE_NONE,
-                          ([gobject.TYPE_INT, gobject.TYPE_INT,
-                            gobject.TYPE_STRING])),
-                    'resource-clicked': (gobject.SIGNAL_RUN_FIRST,
-                          gobject.TYPE_NONE, ([gobject.TYPE_STRING])),
-                    'question-clicked': (gobject.SIGNAL_RUN_FIRST,
-                          gobject.TYPE_NONE, ([gobject.TYPE_STRING]))}
+    __gsignals__ = {'position-changed': (GObject.SignalFlags.RUN_FIRST,
+                          None,
+                          ([GObject.TYPE_INT, GObject.TYPE_INT,
+                            GObject.TYPE_STRING])),
+                    'map-updated': (GObject.SignalFlags.RUN_FIRST,
+                          None,
+                          ([GObject.TYPE_INT, GObject.TYPE_INT,
+                            GObject.TYPE_STRING])),
+                    'resource-clicked': (GObject.SignalFlags.RUN_FIRST,
+                          None, ([GObject.TYPE_STRING])),
+                    'question-clicked': (GObject.SignalFlags.RUN_FIRST,
+                          None, ([GObject.TYPE_STRING]))}
 
     MODE_PLAY = 0
     MODE_EDIT = 1
@@ -60,9 +60,9 @@ class MapNavView(gtk.DrawingArea):
         self.selected = None
         super(MapNavView, self).__init__()
         self.set_can_focus(True)
-        self.add_events(gtk.gdk.KEY_PRESS_MASK | gtk.gdk.POINTER_MOTION_MASK |
-                gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK |
-                gtk.gdk.BUTTON1_MOTION_MASK)
+        self.add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.POINTER_MOTION_MASK |
+                Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK |
+                Gdk.EventMask.BUTTON1_MOTION_MASK)
         self.connect('expose_event', self.expose)
         self.connect('key-press-event', self.__key_press_event_cb)
         self.connect('button_press_event', self.__button_press_event_cb)
@@ -93,7 +93,7 @@ class MapNavView(gtk.DrawingArea):
         self.cache_info = {}
 
     def __key_press_event_cb(self, widget, event):
-        keyname = gtk.gdk.keyval_name(event.keyval)
+        keyname = Gdk.keyval_name(event.keyval)
         if keyname not in ('Up', 'KP_Up', 'Down', 'KP_Down', 'Left', 'KP_Left',
                 'Right', 'KP_Right'):
             return False
@@ -241,7 +241,7 @@ class MapNavView(gtk.DrawingArea):
             self._character.direction = 1
         self._character_destination = character_destination
         self._new_map_position = (new_map_x, new_map_y, new_map_direction)
-        gobject.timeout_add(100, self._update_timer)
+        GObject.timeout_add(100, self._update_timer)
 
     def _update_timer(self):
         self._is_walking = True
@@ -285,12 +285,12 @@ class MapNavView(gtk.DrawingArea):
             info_walls = self.get_information_walls(self.x, self.y,
                     self.direction)
             if self._check_over_door(info_walls, event.x, event.y):
-                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.SB_UP_ARROW))
+                self.window.set_cursor(Gdk.Cursor.new(Gdk.SB_UP_ARROW))
             # verify lateral walls
             elif self._check_left_wall(event.x):
-                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.SB_LEFT_ARROW))
+                self.window.set_cursor(Gdk.Cursor.new(Gdk.SB_LEFT_ARROW))
             elif self._check_right_wall(event.x):
-                self.window.set_cursor(gtk.gdk.Cursor(gtk.gdk.SB_RIGHT_ARROW))
+                self.window.set_cursor(Gdk.Cursor.new(Gdk.SB_RIGHT_ARROW))
             else:
                 self.window.set_cursor(None)
 
@@ -384,7 +384,7 @@ class MapNavView(gtk.DrawingArea):
                         new_dict['svg_image_cache'] = svg
                 else:
                     if not 'pxb_image_cache' in wall_object:
-                        pxb = gtk.gdk.pixbuf_new_from_file(image_file_name)
+                        pxb = GdkPixbuf.Pixbuf.new_from_file(image_file_name)
                         new_dict['pxb_image_cache'] = pxb
 
                 wall_objects.append(new_dict)
@@ -664,21 +664,21 @@ def show_position(nav_view, x, y, direction, top_view):
 
 
 def main():
-    window = gtk.Window()
+    window = Gtk.Window()
     game_map = GameMap()
     nav_view = MapNavView(game_map)
     top_view = mapview.TopMapView(game_map, 200, 200)
     top_view.show_position(nav_view.x, nav_view.y, nav_view.direction)
     nav_view.connect('position-changed', show_position, top_view)
-    hbox = gtk.HBox()
+    hbox = Gtk.HBox()
     hbox.pack_start(nav_view, True, True)
     hbox.pack_start(top_view, False, False)
     window.add(hbox)
     nav_view.grab_focus()
-    window.connect("destroy", gtk.main_quit)
+    window.connect("destroy", Gtk.main_quit)
     window.set_default_size(800, 600)
     window.show_all()
-    gtk.main()
+    Gtk.main()
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ import math
 import simplejson as json
 
 import pygame
-import gtk
+from gi.repository import Gtk
 
 DATA_DIR = 'images'
 STROKE_COLOR = 0, 0, 0  # black
@@ -368,8 +368,8 @@ class Game(object):
             self._clock.tick(FRAMES_PER_SECOND)
 
             # pump gtk messages
-            while gtk.events_pending():
-                gtk.main_iteration()
+            while Gtk.events_pending():
+                Gtk.main_iteration()
 
             # pump pygame messages
             for event in pygame.event.get():
