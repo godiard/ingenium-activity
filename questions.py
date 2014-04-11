@@ -178,22 +178,22 @@ class PrepareQuestionsWin(Gtk.HBox):
         self.tree_scroller.set_policy(Gtk.PolicyType.NEVER,
                 Gtk.PolicyType.AUTOMATIC)
         self.tree_scroller.add(self.quest_listview)
-        self.pack_start(self.tree_scroller, False)
+        self.pack_start(self.tree_scroller, False, False, 0)
 
         vbox = Gtk.VBox()
-        self.pack_start(vbox, True)
+        self.pack_start(vbox, True, True, 0)
 
         # edit question panel
 
-        vbox.pack_start(Gtk.Label(_('Question', True, True, 0)), False, padding=5)
+        vbox.pack_start(Gtk.Label(_('Question')), False, False, padding=5)
         self.question_entry = Gtk.Entry()
         self.question_entry.connect('changed', self.__information_changed_cb)
         hbox_row = Gtk.HBox()
-        hbox_row.pack_start(self.question_entry, True, padding=5)
-        vbox.pack_start(hbox_row, False, padding=5)
+        hbox_row.pack_start(self.question_entry, True, True, padding=5)
+        vbox.pack_start(hbox_row, False, False, padding=5)
 
         self.notebook = Gtk.Notebook()
-        vbox.pack_start(self.notebook, True)
+        vbox.pack_start(self.notebook, True, True, 0)
         self.vbox_edit = Gtk.VBox()
         self.notebook.set_show_tabs(True)
         self.questions_types = []
@@ -210,12 +210,12 @@ class PrepareQuestionsWin(Gtk.HBox):
         hbox_buttons = Gtk.HBox()
         add_reply_button = Gtk.Button(_('Add reply'))
         add_reply_button.connect('clicked', self.__add_reply_cb)
-        hbox_buttons.pack_start(add_reply_button, False, padding=5)
+        hbox_buttons.pack_start(add_reply_button, False, False, padding=5)
 
-        self.vbox_edit.pack_start(hbox_buttons, False, padding=5)
+        self.vbox_edit.pack_start(hbox_buttons, False, False, padding=5)
 
         self.vbox_edit.replies = []  # used to remove the childs
-        self.vbox_edit.pack_start(Gtk.Label(_('Replies', True, True, 0)), False, padding=5)
+        self.vbox_edit.pack_start(Gtk.Label(_('Replies')), False, False, padding=5)
         self.replies_entries = []
         #self._add_reply_entry()
         #self._add_reply_entry(reply_ok=False)
@@ -223,16 +223,16 @@ class PrepareQuestionsWin(Gtk.HBox):
         # graph reply
         self.load_image_button = Gtk.Button(_('Load Image'))
         self.load_image_button.connect('clicked', self.__load_image_cb)
-        vbox_graph_replies.pack_start(self.load_image_button, False, padding=5)
+        vbox_graph_replies.pack_start(self.load_image_button, False, False, padding=5)
 
         self.scrollwin = Gtk.ScrolledWindow()
         self.scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.draw_reply_area = None
-        vbox_graph_replies.pack_start(self.scrollwin, True, padding=5)
+        vbox_graph_replies.pack_start(self.scrollwin, True, False, padding=5)
 
         help_text = _('After select a image, paint the area where ' +
                 'is replied')
-        vbox_graph_replies.pack_start(Gtk.Label(help_text, True, True, 0), False, padding=5)
+        vbox_graph_replies.pack_start(Gtk.Label(help_text), False, False, padding=5)
         self._load_treemodel()
         self.show_all()
         self._modified_data = False
@@ -295,20 +295,24 @@ class PrepareQuestionsWin(Gtk.HBox):
         if text is not None:
             reply_entry.set_text(text)
         reply_entry.connect('changed', self.__information_changed_cb)
-        hbox_row.pack_start(reply_entry, True, padding=5)
-        self.vbox_edit.pack_start(hbox_row, False, padding=5)
+        hbox_row.pack_start(reply_entry, True, True, padding=5)
+        self.vbox_edit.pack_start(hbox_row, False, False, padding=5)
         if reply_ok:
             icon = Icon(icon_name='dialog-ok')
         else:
             icon = Icon(icon_name='dialog-cancel')
 
-        hbox_row.pack_start(icon, False, padding=5)
+        hbox_row.pack_start(icon, False, False, padding=5)
         hbox_row.show_all()
         self.replies_entries.append(reply_entry)
         self.vbox_edit.replies.append(hbox_row)
 
     def select_question(self, treeview):
+        if treeview.get_selection is None:
+            return
         treestore, coldex = treeview.get_selection().get_selected()
+        if coldex is None:
+            return
         logging.debug('selected question %s', treestore.get_value(coldex, 1))
         if self._modified_data:
             # update data
