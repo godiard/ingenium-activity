@@ -508,7 +508,7 @@ class MapNavView(Gtk.DrawingArea):
 
                     ctx.translate(wall_x, wall_y)
                     ctx.scale(scale, scale)
-                    ctx.set_source_pixbuf(pxb, 0, 0)
+                    Gdk.cairo_set_source_pixbuf(ctx, pxb, 0, 0)
                     ctx.paint()
                 wall_object['width'] = width
                 wall_object['height'] = height

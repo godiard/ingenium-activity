@@ -197,7 +197,7 @@ class CollectResourcesWin(Gtk.HBox):
         logging.error('loading treemodel')
         for resource in self.model.data['resources']:
             logging.error('adding resource %s', resource)
-            self.treemodel.append([resource['title'], resource['id_resource']])
+            self.treemodel.append([resource['title'], str(resource['id_resource'])])
 
     def select_resource(self, treeview):
         if treeview.get_selection() is None:

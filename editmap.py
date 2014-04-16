@@ -130,7 +130,7 @@ class EditMapWin(Gtk.HBox):
             pxb = GdkPixbuf.Pixbuf.new_from_file_at_size(image_file_name, 100,
                     100)
             self._resources_store.append([title, pxb, image_file_name,
-                    id_resource, 'resource'])
+                    str(id_resource), 'resource'])
         logging.error('Loading questions')
         for question in self.model.data['questions']:
             text = question['question']
@@ -145,7 +145,7 @@ class EditMapWin(Gtk.HBox):
             pxb = GdkPixbuf.Pixbuf.new_from_file_at_size(image_file_name, 100,
                     100)
             self._resources_store.append([text, pxb, image_file_name,
-                    id_question, 'question'])
+                    str(id_question), 'question'])
 
     def load_furniture(self):
         images_path = os.path.join(activity.get_bundle_path(),
