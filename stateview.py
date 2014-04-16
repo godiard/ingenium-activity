@@ -9,7 +9,6 @@
 from gi.repository import Gtk
 from gi.repository import Rsvg
 import cairo
-import model
 import math
 import logging
 
@@ -72,9 +71,15 @@ class StateView():
         ctx.restore()
 
 
+class FakeModel():
+
+    def __init__(self):
+        self.data = {}
+        self.data['questions'] = []
+
 def main():
     window = Gtk.Window()
-    _model = model.GameModel()
+    _model = FakeModel()
     state_view = StateView(_model, 10, 10, 20)
     area = Gtk.DrawingArea()
 
@@ -86,7 +91,7 @@ def main():
     _model.data['questions'].append('')
 
     # ...and a fake state
-    state = {'displayed_questions': 3, 'replied_questions': 2}
+    state = {'displayed_questions': ['1','2','3'], 'replied_questions': ['1','2']}
     _model.data['state'] = state
 
     def __draw_cb(widget, ctx, state_view):
