@@ -51,7 +51,7 @@ class _DialogWindow(Gtk.Window):
 
         toolbar = _DialogToolbar(icon_name, title)
         toolbar.connect('stop-clicked', self._stop_clicked_cb)
-        vbox.pack_start(toolbar, False)
+        vbox.pack_start(toolbar, False, False, 0)
 
         self.content_vbox = Gtk.VBox()
         self.content_vbox.set_border_width(style.DEFAULT_SPACING)
@@ -126,14 +126,14 @@ class ResourceDialog(_DialogWindow):
         scrollwin.add_with_viewport(vbox)
 
         image = Gtk.Image()
-        vbox.pack_start(image, False, padding=5)
+        vbox.pack_start(image, False, False, padding=5)
         image.set_from_file(resource['file_image'])
 
         editor = WebKit.WebView()
         editor.set_editable(False)
         height = int(Gdk.Screen.height() / 3)
         editor.set_size_request(-1, height)
-        vbox.pack_start(editor, False, padding=5)
+        vbox.pack_start(editor, False, False, padding=5)
 
         if resource['file_text'] != '':
             if os.path.exists(resource['file_text']):
@@ -168,7 +168,7 @@ class QuestionDialog(_DialogWindow):
         self.image_result = Gtk.Image()
         self.notebook.append_page(self.image_result, None)
 
-        self.content_vbox.pack_start(self.notebook, True, True)
+        self.content_vbox.pack_start(self.notebook, True, True, 0)
         self.content_vbox.set_border_width(0)
 
         question_type = question['type']
@@ -180,12 +180,12 @@ class QuestionDialog(_DialogWindow):
             for reply in replies:
                 hbox_row = Gtk.HBox()
                 reply_label = Gtk.Label(label=reply['text'])
-                hbox_row.pack_start(reply_label, True, padding=5)
-                vbox.pack_start(hbox_row, False, padding=5)
+                hbox_row.pack_start(reply_label, True, True, padding=5)
+                vbox.pack_start(hbox_row, False, False, padding=5)
                 reply_button = Gtk.Button(_('Select'))
                 reply_button.connect('clicked', self.__button_reply_click_cb,
                         reply['valid'])
-                hbox_row.pack_start(reply_button, False, padding=5)
+                hbox_row.pack_start(reply_button, False, False, padding=5)
                 hbox_row.show_all()
 
         if question_type == model.QUESTION_TYPE_GRAPHIC:
@@ -194,7 +194,7 @@ class QuestionDialog(_DialogWindow):
 
             self.draw_reply_area = questions.DrawReplyArea(image_path,
                     reply_file_name=reply_image_path)
-            vbox.pack_start(self.draw_reply_area, False, padding=5)
+            vbox.pack_start(self.draw_reply_area, False, False, padding=5)
             self.draw_reply_area.connect('reply-selected',
                     self.__draw_reply_click_cb)
 
