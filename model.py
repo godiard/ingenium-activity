@@ -1,6 +1,6 @@
 import os
 import logging
-import simplejson
+import json
 from sugar3.activity import activity
 import zipfile
 
@@ -77,7 +77,7 @@ class GameModel:
         data_file_name = 'data.json'
         f = open(os.path.join(instance_path, data_file_name), 'w')
         try:
-            simplejson.dump(self.data, f)
+            json.dump(self.data, f)
         finally:
             f.close()
 
@@ -127,7 +127,7 @@ class GameModel:
 
         f = open(os.path.join(instance_path, data_file_name), 'r')
         try:
-            self.data = simplejson.load(f)
+            self.data = json.load(f)
 
             if not 'resources' in self.data:
                 self.data['resources'] = []

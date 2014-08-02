@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os
 import math
-import simplejson as json
+import json
 
 import pygame
 from gi.repository import Gtk
